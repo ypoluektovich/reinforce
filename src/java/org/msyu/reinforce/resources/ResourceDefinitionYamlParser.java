@@ -86,8 +86,8 @@ public class ResourceDefinitionYamlParser {
 			return new FilteringResourceCollection(
 					collection,
 					new IncludeExcludeResourceFilter(
-							new OrResourceFilter(includes),
-							new OrResourceFilter(excludes)
+							includes.isEmpty() ? null : new OrResourceFilter(includes),
+							excludes.isEmpty() ? null : new OrResourceFilter(excludes)
 					)
 			);
 		}

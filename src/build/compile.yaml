@@ -1,2 +1,4 @@
 type: javac
+compiler: external
 source: src/java
+classpath: { location: lib, include: .jar }

@@ -13,7 +13,11 @@ public class IncludeExcludeResourceFilter implements ResourceFilter {
 
 	@Override
 	public boolean fits(Resource resource) throws ResourceEnumerationException {
-		return !myExcludeFilter.fits(resource) || myIncludeFilter.fits(resource);
+		if (myExcludeFilter == null) {
+			return myIncludeFilter == null || myIncludeFilter.fits(resource);
+		} else {
+			return !myExcludeFilter.fits(resource) || myIncludeFilter != null && myIncludeFilter.fits(resource);
+		}
 	}
 
 }
