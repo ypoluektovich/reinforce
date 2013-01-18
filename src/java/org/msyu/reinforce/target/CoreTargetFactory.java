@@ -10,6 +10,7 @@ public class CoreTargetFactory implements TargetFactory {
 	public static final String JAVAC = "javac";
 	public static final String ZIP = "zip";
 	public static final String UNZIP = "unzip";
+	public static final String EXEC = "exec";
 
 	@Override
 	public Target createTargetObject(String type, String name) {
@@ -24,6 +25,8 @@ public class CoreTargetFactory implements TargetFactory {
 				return new ZipTarget(name);
 			case UNZIP:
 				return new UnzipTarget(name);
+			case EXEC:
+				return new ExecTarget(name);
 			default:
 				return null;
 		}
