@@ -1,5 +1,6 @@
 package org.msyu.reinforce.target;
 
+import org.msyu.reinforce.Build;
 import org.msyu.reinforce.BuildException;
 import org.msyu.reinforce.Log;
 import org.msyu.reinforce.Target;
@@ -55,7 +56,7 @@ public class ZipTarget extends Target implements Resource, ResourceCollection {
 
 	private void initializeDestination(Map docMap) throws TargetInitializationException {
 		if (!docMap.containsKey(DESTINATION_KEY)) {
-			myDestinationPath = Paths.get("build/" + getName() + ".zip");
+			myDestinationPath = Paths.get("build", getName() + ".zip");
 			return;
 		}
 		Object destinationObject = docMap.get(DESTINATION_KEY);
@@ -68,16 +69,17 @@ public class ZipTarget extends Target implements Resource, ResourceCollection {
 
 	@Override
 	public void run() throws BuildException {
+		Path destinationPath = Build.getCurrent().getBasePath().resolve(myDestinationPath);
 		try {
 			Log.verbose("Clearing the destination path");
-			FilesUtil.deleteFileTree(myDestinationPath);
+			FilesUtil.deleteFileTree(destinationPath);
 			Log.verbose("Creating parent directories");
-			Files.createDirectories(myDestinationPath.getParent());
+			Files.createDirectories(destinationPath.getParent());
 		} catch (IOException e) {
 			throw new BuildException("failed to prepare the destination", e);
 		}
 
-		try (ZipOutputStream output = new ZipOutputStream(new BufferedOutputStream(Files.newOutputStream(myDestinationPath)))) {
+		try (ZipOutputStream output = new ZipOutputStream(new BufferedOutputStream(Files.newOutputStream(destinationPath)))) {
 			ResourceIterator resourceIterator = mySources.getResourceIterator();
 			Resource resource;
 			Set<String> addedEntries = new HashSet<>();

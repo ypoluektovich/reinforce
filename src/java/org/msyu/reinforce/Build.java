@@ -1,5 +1,7 @@
 package org.msyu.reinforce;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,8 +17,15 @@ public class Build {
 
 	private final Set<Target> executedTargets = new HashSet<>();
 
-	public Build(TargetRepository targetRepository) {
+	private final Path myBasePath;
+
+	public Build(TargetRepository targetRepository, final Path basePath) throws BuildException {
 		this.myTargetRepository = targetRepository;
+
+		if (!Files.isDirectory(basePath)) {
+			throw new BuildException("Specified base path is not a directory: " + basePath);
+		}
+		this.myBasePath = basePath;
 	}
 
 	public void executeOnce(Iterable<String> targetNames) throws NoSuchTargetException, BuildException {
@@ -59,5 +68,9 @@ public class Build {
 		} else {
 			executedTargets.remove(target);
 		}
+	}
+
+	public Path getBasePath() {
+		return myBasePath;
 	}
 }

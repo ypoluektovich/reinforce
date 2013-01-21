@@ -1,5 +1,6 @@
 package org.msyu.reinforce.target;
 
+import org.msyu.reinforce.Build;
 import org.msyu.reinforce.BuildException;
 import org.msyu.reinforce.Log;
 import org.msyu.reinforce.resources.Resource;
@@ -14,7 +15,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
@@ -26,7 +26,7 @@ public abstract class AbstractJavac implements JavaCompiler {
 
 	@Override
 	public Path execute(String targetName, ResourceCollection sources, ResourceCollection classpath) throws BuildException {
-		Path buildHome = Paths.get("build");
+		Path buildHome = Build.getCurrent().getBasePath().resolve("build");
 		Path destinationDir = buildHome.resolve(targetName);
 		Path optionsFile = buildHome.resolve(targetName + OPTIONS_FILE_NAME_SUFFIX);
 		Path sourcesFile = buildHome.resolve(targetName + SOURCES_FILE_NAME_SUFFIX);
@@ -35,7 +35,7 @@ public abstract class AbstractJavac implements JavaCompiler {
 
 		compileOrDie(buildCompilerCommandLine(optionsFile, destinationDir, classpath, sourcesFile, sources));
 
-		return destinationDir;
+		return Build.getCurrent().getBasePath().relativize(destinationDir);
 	}
 
 	private void clearDestinations(Path destinationDir, Path optionsFile, Path sourcesFile) throws BuildException {

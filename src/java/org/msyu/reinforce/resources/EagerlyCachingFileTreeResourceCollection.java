@@ -1,5 +1,6 @@
 package org.msyu.reinforce.resources;
 
+import org.msyu.reinforce.Build;
 import org.msyu.reinforce.Log;
 
 import java.io.IOException;
@@ -23,25 +24,26 @@ public class EagerlyCachingFileTreeResourceCollection extends AbstractEagerlyCac
 
 	@Override
 	protected List<Resource> innerRebuildCache() throws ResourceEnumerationException {
-		Log.verbose("Enumerating files under %s", myRootPath);
+		final Path rootPath = Build.getCurrent().getBasePath().resolve(myRootPath);
+		Log.verbose("Enumerating files under %s", rootPath);
 		final List<Resource> resources = new ArrayList<>();
 		try {
 			Files.walkFileTree(
-					myRootPath,
+					rootPath,
 					EnumSet.of(FileVisitOption.FOLLOW_LINKS),
 					Integer.MAX_VALUE,
 					new FileVisitor<Path>() {
 						@Override
 						public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
 							Log.debug("Enumerating files in directory: %s", dir);
-							resources.add(new FileSystemResource(dir, attrs, myRootPath.relativize(dir)));
+							resources.add(new FileSystemResource(dir, attrs, rootPath.relativize(dir)));
 							return FileVisitResult.CONTINUE;
 						}
 
 						@Override
 						public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
 							Log.debug("Found file: %s", file);
-							resources.add(new FileSystemResource(file, attrs, myRootPath.relativize(file)));
+							resources.add(new FileSystemResource(file, attrs, rootPath.relativize(file)));
 							return FileVisitResult.CONTINUE;
 						}
 

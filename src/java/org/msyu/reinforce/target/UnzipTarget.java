@@ -1,5 +1,6 @@
 package org.msyu.reinforce.target;
 
+import org.msyu.reinforce.Build;
 import org.msyu.reinforce.BuildException;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
@@ -53,7 +54,7 @@ public class UnzipTarget extends Target implements ResourceCollection {
 
 	private void initializeDestination(Map docMap) throws TargetInitializationException {
 		if (!docMap.containsKey(DESTINATION_KEY)) {
-			myDestinationPath = Paths.get("build/" + getName());
+			myDestinationPath = Paths.get("build", getName());
 			return;
 		}
 		Object destinationObject = docMap.get(DESTINATION_KEY);
@@ -66,9 +67,10 @@ public class UnzipTarget extends Target implements ResourceCollection {
 
 	@Override
 	public void run() throws BuildException {
+		Path destinationPath = Build.getCurrent().getBasePath().resolve(myDestinationPath);
 		try {
-			FilesUtil.deleteFileTree(myDestinationPath);
-			Files.createDirectories(myDestinationPath);
+			FilesUtil.deleteFileTree(destinationPath);
+			Files.createDirectories(destinationPath);
 		} catch (IOException e) {
 			throw new BuildException("failed to prepare directory for unpacked files", e);
 		}
@@ -89,9 +91,9 @@ public class UnzipTarget extends Target implements ResourceCollection {
 					String entryName = entry.getName();
 					boolean entryIsDirectory = entryName.endsWith("/");
 					if (entryIsDirectory) {
-						Files.createDirectories(myDestinationPath.resolve(entryName.substring(0, entryName.length() - 1)));
+						Files.createDirectories(destinationPath.resolve(entryName.substring(0, entryName.length() - 1)));
 					} else {
-						Path entryDestinationPath = myDestinationPath.resolve(entryName);
+						Path entryDestinationPath = destinationPath.resolve(entryName);
 						Files.createDirectories(entryDestinationPath.getParent());
 						try (InputStream entryStream = zipFile.getInputStream(entry)) {
 							Files.copy(entryStream, entryDestinationPath);
