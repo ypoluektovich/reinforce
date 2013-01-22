@@ -69,16 +69,18 @@ public abstract class AbstractJavac implements JavaCompiler {
 			writer.write(destinationDir.toString());
 			writer.newLine();
 
-			ResourceIterator cpIterator = classpath.getResourceIterator();
-			Resource cpElement = cpIterator.next();
-			if (cpElement != null) {
-				writer.write("-classpath ");
-				writer.write(cpElement.getPath().toString());
-				while ((cpElement = cpIterator.next()) != null) {
-					writer.write(":");
+			if (classpath != null) {
+				ResourceIterator cpIterator = classpath.getResourceIterator();
+				Resource cpElement = cpIterator.next();
+				if (cpElement != null) {
+					writer.write("-classpath ");
 					writer.write(cpElement.getPath().toString());
+					while ((cpElement = cpIterator.next()) != null) {
+						writer.write(":");
+						writer.write(cpElement.getPath().toString());
+					}
+					writer.newLine();
 				}
-				writer.newLine();
 			}
 		} catch (IOException e) {
 			throw new BuildException("IO error while writing javac options file", e);

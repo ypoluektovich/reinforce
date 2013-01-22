@@ -59,10 +59,9 @@ public class JavacTarget extends Target implements ResourceCollection {
 	private ResourceCollection prepareClasspath(Map docMap, Map<String, Target> dependencyTargetByName)
 			throws TargetInitializationException
 	{
-		if (!docMap.containsKey(CLASSPATH_KEY)) {
-			throw new TargetInitializationException("missing required parameter '" + CLASSPATH_KEY + "'");
-		}
-		return ResourceDefinitionYamlParser.parseAsCollection(docMap.get(CLASSPATH_KEY), dependencyTargetByName);
+		return docMap.containsKey(CLASSPATH_KEY) ?
+				ResourceDefinitionYamlParser.parseAsCollection(docMap.get(CLASSPATH_KEY), dependencyTargetByName) :
+				null;
 	}
 
 	private JavaCompiler prepareCompiler(Map docMap) throws TargetInitializationException {
