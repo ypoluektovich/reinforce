@@ -3,5 +3,5 @@ type: zip
 source:
  - compile
  - { target: explode-libs , exclude: META-INF }
- - src/resources
+ - src/core/resources
 destination: build/reinforce.jar
