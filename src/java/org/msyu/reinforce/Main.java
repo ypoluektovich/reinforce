@@ -16,7 +16,7 @@ public class Main {
 		Reinforce reinforce = new Reinforce();
 
 		try {
-			reinforce.setTargetDefLocation(Paths.get(System.getProperty("reinforce.targetDef.location", "src/build")));
+			reinforce.setTargetDefLocation(Paths.get(System.getProperty("reinforce.targetDef.location", "reinforce")));
 		} catch (InvalidPathException e) {
 			Log.error("Value specified as target definition location is not a valid path");
 			System.exit(LOAD_FAILURE_EXIT_STATUS);
