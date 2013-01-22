@@ -11,6 +11,8 @@ public class CoreTargetFactory implements TargetFactory {
 	public static final String ZIP = "zip";
 	public static final String UNZIP = "unzip";
 	public static final String EXEC = "exec";
+	public static final String REINFORCE = "reinforce";
+	public static final String REIN = "rein";
 
 	@Override
 	public Target createTargetObject(String type, String name) {
@@ -27,6 +29,9 @@ public class CoreTargetFactory implements TargetFactory {
 				return new UnzipTarget(name);
 			case EXEC:
 				return new ExecTarget(name);
+			case REINFORCE:
+			case REIN:
+				return new ReinforceTarget(name);
 			default:
 				return null;
 		}

@@ -13,14 +13,14 @@ public class Build {
 		return ourContextBuild.get();
 	}
 
-	private final TargetRepository myTargetRepository;
-
-	private final Set<Target> executedTargets = new HashSet<>();
+	private final Reinforce myReinforce;
 
 	private final Path myBasePath;
 
-	public Build(TargetRepository targetRepository, final Path basePath) throws BuildException {
-		this.myTargetRepository = targetRepository;
+	private final Set<Target> executedTargets = new HashSet<>();
+
+	public Build(Reinforce reinforce, Path basePath) throws BuildException {
+		this.myReinforce = reinforce;
 
 		if (!Files.isDirectory(basePath)) {
 			throw new BuildException("Specified base path is not a directory: " + basePath);
@@ -28,14 +28,22 @@ public class Build {
 		this.myBasePath = basePath;
 	}
 
-	public void executeOnce(Iterable<String> targetNames) throws NoSuchTargetException, BuildException {
+	public Reinforce getReinforce() {
+		return myReinforce;
+	}
+
+	public Path getBasePath() {
+		return myBasePath;
+	}
+
+	public void executeOnce(Iterable<String> targetNames) throws BuildException {
 		for (String targetName : targetNames) {
 			runRecursively(targetName);
 		}
 	}
 
-	private void runRecursively(String targetName) throws NoSuchTargetException, BuildException {
-		Target target = myTargetRepository.getTarget(targetName);
+	private void runRecursively(String targetName) throws BuildException {
+		Target target = myReinforce.getTarget(targetName);
 		if (isTargetExecuted(target)) {
 			return;
 		}
@@ -70,7 +78,4 @@ public class Build {
 		}
 	}
 
-	public Path getBasePath() {
-		return myBasePath;
-	}
 }
