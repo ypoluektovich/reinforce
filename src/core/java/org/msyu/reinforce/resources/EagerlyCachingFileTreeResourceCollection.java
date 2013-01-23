@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -25,6 +26,18 @@ public class EagerlyCachingFileTreeResourceCollection extends AbstractEagerlyCac
 	@Override
 	protected List<Resource> innerRebuildCache() throws ResourceEnumerationException {
 		final Path rootPath = Build.getCurrent().getBasePath().resolve(myRootPath);
+		if (Files.isRegularFile(rootPath)) {
+			Log.verbose("Collection root is a file: %s", rootPath);
+			try {
+				return Collections.singletonList((Resource) new FileSystemResource(
+						rootPath,
+						Files.readAttributes(rootPath, BasicFileAttributes.class),
+						rootPath.getFileName()
+				));
+			} catch (IOException e) {
+				throw new ResourceEnumerationException(e);
+			}
+		}
 		Log.verbose("Enumerating files under %s", rootPath);
 		final List<Resource> resources = new ArrayList<>();
 		try {
