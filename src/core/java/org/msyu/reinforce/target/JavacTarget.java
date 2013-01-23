@@ -1,6 +1,7 @@
 package org.msyu.reinforce.target;
 
 import org.msyu.reinforce.BuildException;
+import org.msyu.reinforce.Log;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
 import org.msyu.reinforce.resources.EagerlyCachingFileTreeResourceCollection;
@@ -59,9 +60,13 @@ public class JavacTarget extends Target implements ResourceCollection {
 	private ResourceCollection prepareClasspath(Map docMap, Map<String, Target> dependencyTargetByName)
 			throws TargetInitializationException
 	{
-		return docMap.containsKey(CLASSPATH_KEY) ?
-				ResourceDefinitionYamlParser.parseAsCollection(docMap.get(CLASSPATH_KEY), dependencyTargetByName) :
-				null;
+		if (docMap.containsKey(CLASSPATH_KEY)) {
+			Log.debug("Parsing classpath setting");
+			return ResourceDefinitionYamlParser.parseAsCollection(docMap.get(CLASSPATH_KEY), dependencyTargetByName);
+		} else {
+			Log.debug("No classpath has been set");
+			return null;
+		}
 	}
 
 	private JavaCompiler prepareCompiler(Map docMap) throws TargetInitializationException {

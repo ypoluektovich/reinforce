@@ -70,4 +70,8 @@ public class EagerlyCachingFileTreeResourceCollection extends AbstractEagerlyCac
 		return resources;
 	}
 
+	@Override
+	public String toString() {
+		return super.toString() + "{" + myRootPath + "}";
+	}
 }

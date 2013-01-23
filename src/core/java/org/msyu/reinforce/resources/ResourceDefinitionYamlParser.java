@@ -1,5 +1,6 @@
 package org.msyu.reinforce.resources;
 
+import org.msyu.reinforce.Log;
 import org.msyu.reinforce.Target;
 
 import java.nio.file.InvalidPathException;
@@ -18,10 +19,13 @@ public class ResourceDefinitionYamlParser {
 		if (defObject == null) {
 			throw new ResourceConstructionException("null is not a resource collection");
 		} else if (defObject instanceof String) {
+			Log.debug("Interpreting a string: '%s'...", defObject);
 			return parseStringAsCollection(((String) defObject), targetByName);
 		} else if (defObject instanceof List) {
+			Log.debug("Interpreting a list...");
 			return parseListAsCollection(((List) defObject), targetByName);
 		} else if (defObject instanceof Map) {
+			Log.debug("Interpreting a map...");
 			return parseMapAsCollection(((Map) defObject), targetByName);
 		} else {
 			throw new ResourceConstructionException("can't parse a resource collection definition out of " +
@@ -34,8 +38,10 @@ public class ResourceDefinitionYamlParser {
 			throws ResourceConstructionException
 	{
 		if (targetByName.containsKey(defString)) {
+			Log.debug("Interpreting a string as a target...");
 			return parseTargetAsCollection(defString, targetByName);
 		} else {
+			Log.debug("Interpreting a string as a file collection...");
 			return parseStringAsFileCollection(defString);
 		}
 	}
@@ -43,14 +49,20 @@ public class ResourceDefinitionYamlParser {
 	private static ResourceCollection parseTargetAsCollection(String defString, Map<String, Target> targetByName)
 			throws ResourceConstructionException
 	{
+		if (!targetByName.containsKey(defString)) {
+			throw new ResourceConstructionException("target '" + defString + "' is unavailable");
+		}
 		Target target = targetByName.get(defString);
 		if (target instanceof ResourceCollection) {
+			Log.debug("Target is a resource collection");
 			return (ResourceCollection) target;
 		} else if (target instanceof Resource) {
-			return new SingleResourceCollection((Resource) target);
+			ResourceCollection collection = new SingleResourceCollection((Resource) target);
+			Log.debug("Target is a single resource; wrapping in a collection: %s", collection);
+			return collection;
 		} else {
-			throw new ResourceConstructionException("can't construct a resource collection from target '" +
-					defString + "'");
+			throw new ResourceConstructionException("can't interpret target '" + defString +
+					"' as a resource collection");
 		}
 	}
 
@@ -58,7 +70,9 @@ public class ResourceDefinitionYamlParser {
 			throws ResourceConstructionException
 	{
 		try {
-			return new EagerlyCachingFileTreeResourceCollection(Paths.get(defString));
+			ResourceCollection collection = new EagerlyCachingFileTreeResourceCollection(Paths.get(defString));
+			Log.debug("Creating a file tree resource collection: %s", collection);
+			return collection;
 		} catch (InvalidPathException e) {
 			throw new ResourceConstructionException("path is invalid: " + defString);
 		}
@@ -68,34 +82,42 @@ public class ResourceDefinitionYamlParser {
 			throws ResourceConstructionException
 	{
 		Map<ResourceCollection, ResourceTranslation> translationByCollection = new LinkedHashMap<>();
-		for (Object defObject : defList) {
-			translationByCollection.put(parseAsCollection(defObject, targetByName), null);
+		Log.debug("List has %d items, iterating...", defList.size());
+		for (int i = 0; i < defList.size(); i++) {
+			Log.debug("Interpreting item %d...", i + 1);
+			translationByCollection.put(parseAsCollection(defList.get(i), targetByName), null);
 		}
-		return new EagerlyCachingUnionResourceCollection(translationByCollection);
+		ResourceCollection collection = new EagerlyCachingUnionResourceCollection(translationByCollection);
+		Log.debug("Interpreted all items, creating a union collection: %s", collection);
+		return collection;
 	}
 
 
 	private static ResourceCollection parseMapAsCollection(Map defMap, Map<String, Target> targetByName)
 			throws ResourceConstructionException {
-		ResourceCollection collection = getBaseCollection(defMap, targetByName);
+		ResourceCollection baseCollection = getBaseCollection(defMap, targetByName);
 		Set<ResourceFilter> includes = getResourceFilters(defMap, "include");
 		Set<ResourceFilter> excludes = getResourceFilters(defMap, "exclude");
 		if (includes.isEmpty() && excludes.isEmpty()) {
-			return collection;
+			Log.debug("No filters, returning base collection");
+			return baseCollection;
 		} else {
-			return new FilteringResourceCollection(
-					collection,
+			ResourceCollection collection = new FilteringResourceCollection(
+					baseCollection,
 					new IncludeExcludeResourceFilter(
 							includes.isEmpty() ? null : new OrResourceFilter(includes),
 							excludes.isEmpty() ? null : new OrResourceFilter(excludes)
 					)
 			);
+			Log.debug("Creating filtering collection: %s", collection);
+			return collection;
 		}
 	}
 
 	private static ResourceCollection getBaseCollection(Map defMap, Map<String, Target> targetByName)
 			throws ResourceConstructionException
 	{
+		Log.debug("Interpreting base collection from map...");
 		Object targetObject = defMap.containsKey("target") ? defMap.get("target") : null;
 		Object locationObject = defMap.containsKey("location") ? defMap.get("location") : null;
 		if ((targetObject == null) == (locationObject == null)) {
@@ -104,12 +126,14 @@ public class ResourceDefinitionYamlParser {
 		}
 		if (targetObject != null) {
 			if (targetObject instanceof String) {
+				Log.debug("Interpreting target as base collection...");
 				return parseTargetAsCollection((String) targetObject, targetByName);
 			} else {
 				throw new ResourceConstructionException("target must be referenced by its name string");
 			}
 		} else /* locationObject != null */ {
 			if (locationObject instanceof String) {
+				Log.debug("Interpreting location as base collection...");
 				return parseStringAsFileCollection((String) locationObject);
 			} else {
 				throw new ResourceConstructionException("location must be a string (a path in file system)");
@@ -120,6 +144,7 @@ public class ResourceDefinitionYamlParser {
 	private static Set<ResourceFilter> getResourceFilters(Map defMap, String filterKey)
 			throws ResourceConstructionException
 	{
+		Log.debug("Interpreting %s filter from map...", filterKey);
 		Set<ResourceFilter> individualFilters = new HashSet<>();
 		if (defMap.containsKey(filterKey)) {
 			Object filterList = defMap.get(filterKey);

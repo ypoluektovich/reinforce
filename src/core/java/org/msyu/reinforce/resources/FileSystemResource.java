@@ -32,4 +32,8 @@ public class FileSystemResource implements Resource {
 		return myRelativePath;
 	}
 
+	@Override
+	public String toString() {
+		return this.getClass().getName() + String.format("{%s -> %s}", myPath, myRelativePath);
+	}
 }

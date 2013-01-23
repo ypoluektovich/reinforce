@@ -1,5 +1,7 @@
 package org.msyu.reinforce.resources;
 
+import org.msyu.reinforce.Log;
+
 import java.util.List;
 
 public class FilteringResourceCollection implements ResourceCollection {
@@ -18,21 +20,23 @@ public class FilteringResourceCollection implements ResourceCollection {
 
 	@Override
 	public ResourceIterator getResourceIterator() throws ResourceEnumerationException {
+		Log.debug("Acquiring iterator for inner (filtered) collection: %s", myInnerCollection);
+		final ResourceIterator innerIterator = myInnerCollection.getResourceIterator();
+		Log.debug("Applying filter %s", myResourceFilter);
 		return new ResourceIterator() {
-
-			private final ResourceIterator innerIterator = myInnerCollection.getResourceIterator();
-
 			@Override
 			public Resource next() throws ResourceEnumerationException {
 				Resource nextResource;
 				while ((nextResource = innerIterator.next()) != null) {
+					Log.debug("Applying filter to resource %s...", nextResource);
 					if (myResourceFilter.fits(nextResource)) {
+						Log.debug("Resource fits");
 						return nextResource;
 					}
+					Log.debug("Resource does not fit");
 				}
 				return null;
 			}
-
 		};
 	}
 

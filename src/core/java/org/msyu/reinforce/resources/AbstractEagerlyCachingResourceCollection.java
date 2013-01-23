@@ -1,6 +1,7 @@
 package org.msyu.reinforce.resources;
 
 import org.msyu.reinforce.Build;
+import org.msyu.reinforce.Log;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,12 +15,13 @@ public abstract class AbstractEagerlyCachingResourceCollection implements Resour
 	@Override
 	public final ResourceIterator getResourceIterator() throws ResourceEnumerationException {
 		Build currentBuild = Build.getCurrent();
-		return new ResourceListIterator(
-				(myCachedResources.containsKey(currentBuild) ?
-						myCachedResources.get(currentBuild) :
-						rebuildCache()
-				).iterator()
-		);
+		if (myCachedResources.containsKey(currentBuild)) {
+			Log.debug("Using cache for %s", this);
+			return new ResourceListIterator(myCachedResources.get(currentBuild).iterator());
+		} else {
+			Log.debug("Rebuilding cache for %s", this);
+			return new ResourceListIterator(rebuildCache().iterator());
+		}
 	}
 
 	@Override

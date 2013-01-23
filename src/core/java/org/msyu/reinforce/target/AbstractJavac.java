@@ -64,30 +64,42 @@ public abstract class AbstractJavac implements JavaCompiler {
 	}
 
 	private void writeOptionsFile(Path optionsFile, Path destinationDir, ResourceCollection classpath) throws BuildException {
+		Log.debug("Writing options file: %s", optionsFile);
 		try (BufferedWriter writer = Files.newBufferedWriter(optionsFile, Charset.forName("UTF-8"))) {
+			Log.debug("Writing destination dir option: -d %s", destinationDir);
 			writer.write("-d ");
 			writer.write(destinationDir.toString());
 			writer.newLine();
 
-			if (classpath != null) {
+			if (classpath == null) {
+				Log.debug("No classpath");
+			} else {
+				Log.debug("Enumerating classpath entries...");
 				ResourceIterator cpIterator = classpath.getResourceIterator();
 				Resource cpElement = cpIterator.next();
-				if (cpElement != null) {
+				if (cpElement == null) {
+					Log.debug("Classpath is empty, skipping", destinationDir);
+				} else {
+					Log.debug("First classpath entry: %s", cpElement.getPath());
 					writer.write("-classpath ");
 					writer.write(cpElement.getPath().toString());
 					while ((cpElement = cpIterator.next()) != null) {
+						Log.debug("Next classpath entry: %s", cpElement.getPath());
 						writer.write(":");
 						writer.write(cpElement.getPath().toString());
 					}
 					writer.newLine();
+					Log.debug("Classpath enumerated");
 				}
 			}
+			Log.debug("Closing options file");
 		} catch (IOException e) {
 			throw new BuildException("IO error while writing javac options file", e);
 		}
 	}
 
 	private void writeSourcesFile(Path sourcesFile, ResourceCollection sources) throws BuildException {
+		Log.debug("Writing sources file: %s", sourcesFile);
 		ResourceIterator resourceIterator = sources.getResourceIterator();
 		Path sourceElement = getNextFile(resourceIterator);
 		if (sourceElement == null) {
@@ -98,6 +110,7 @@ public abstract class AbstractJavac implements JavaCompiler {
 				writer.write(sourceElement.toString());
 				writer.newLine();
 			} while ((sourceElement = getNextFile(resourceIterator)) != null);
+			Log.debug("Closing sources file");
 		} catch (IOException e) {
 			throw new BuildException("I/O error while saving the list of files to be compiled", e);
 		}
