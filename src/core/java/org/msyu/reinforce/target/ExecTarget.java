@@ -1,5 +1,6 @@
 package org.msyu.reinforce.target;
 
+import org.msyu.reinforce.Build;
 import org.msyu.reinforce.BuildException;
 import org.msyu.reinforce.Log;
 import org.msyu.reinforce.Target;
@@ -17,12 +18,12 @@ public class ExecTarget extends Target {
 
 	private List<String> myCommand;
 
-	public ExecTarget(final String name) {
+	public ExecTarget(String name) {
 		super(name);
 	}
 
 	@Override
-	protected void initTarget(final Map docMap, final Map<String, Target> dependencyTargetByName) throws TargetInitializationException {
+	protected void initTarget(Map docMap, Map<String, Target> dependencyTargetByName) throws TargetInitializationException {
 		if (!docMap.containsKey(COMMAND_KEY)) {
 			throw new TargetInitializationException("missing required parameter: " + COMMAND_KEY);
 		}
@@ -33,7 +34,7 @@ public class ExecTarget extends Target {
 			List commandList = (List) commandObject;
 			myCommand = new ArrayList<>(commandList.size());
 			for (int i = 0; i < commandList.size(); i++) {
-				final Object commandArgument = commandList.get(i);
+				Object commandArgument = commandList.get(i);
 				if (commandArgument instanceof String) {
 					myCommand.add((String) commandArgument);
 				} else {
@@ -48,7 +49,10 @@ public class ExecTarget extends Target {
 		Log.verbose("Running external command...");
 		int exitCode;
 		try {
-			Process process = new ProcessBuilder(myCommand).inheritIO().start();
+			Process process = new ProcessBuilder(myCommand)
+					.directory(Build.getCurrent().getBasePath().toFile())
+					.inheritIO()
+					.start();
 			while (true) {
 				try {
 					exitCode = process.waitFor();
