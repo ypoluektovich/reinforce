@@ -1,5 +1,5 @@
 depends-on: [ compile , explode-libs ]
-type: zip
+type: jar
 source:
  - compile
  - { target: explode-libs , exclude: META-INF }

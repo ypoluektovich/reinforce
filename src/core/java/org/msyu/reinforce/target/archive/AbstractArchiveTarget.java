@@ -1,4 +1,4 @@
-package org.msyu.reinforce.target;
+package org.msyu.reinforce.target.archive;
 
 import org.msyu.reinforce.Build;
 import org.msyu.reinforce.BuildException;
@@ -14,37 +14,37 @@ import org.msyu.reinforce.resources.ResourceIterator;
 import org.msyu.reinforce.resources.SingleResourceIterator;
 import org.msyu.reinforce.util.FilesUtil;
 
-import java.io.BufferedOutputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
-public class ZipTarget extends Target implements Resource, ResourceCollection {
+public abstract class AbstractArchiveTarget<T extends Closeable> extends Target implements Resource, ResourceCollection {
 
 	public static final String SOURCE_KEY = "source";
 
 	public static final String DESTINATION_KEY = "destination";
 
+
 	private ResourceCollection mySources;
 
 	private Path myDestinationPath;
 
-	public ZipTarget(String name) {
+
+	protected AbstractArchiveTarget(String name) {
 		super(name);
 	}
 
+
 	@Override
-	protected void initTarget(Map docMap, Map<String, Target> dependencyTargetByName) throws TargetInitializationException {
+	protected final void initTarget(Map docMap, Map<String, Target> dependencyTargetByName) throws TargetInitializationException {
 		initializeSources(docMap, dependencyTargetByName);
 		initializeDestination(docMap);
+		customInitTarget();
 	}
 
 	private void initializeSources(Map docMap, Map<String, Target> dependencyTargetByName) throws TargetInitializationException {
@@ -67,6 +67,11 @@ public class ZipTarget extends Target implements Resource, ResourceCollection {
 		throw new TargetInitializationException("invalid destination: must be a string");
 	}
 
+	protected void customInitTarget() {
+		// inheritors may override
+	}
+
+
 	@Override
 	public void run() throws BuildException {
 		Path destinationPath = myDestinationPath == null ?
@@ -81,39 +86,23 @@ public class ZipTarget extends Target implements Resource, ResourceCollection {
 			throw new BuildException("failed to prepare the destination", e);
 		}
 
-		try (ZipOutputStream output = new ZipOutputStream(new BufferedOutputStream(Files.newOutputStream(destinationPath)))) {
+		try (T archive = openArchive(destinationPath)) {
 			ResourceIterator resourceIterator = mySources.getResourceIterator();
 			Resource resource;
-			Set<String> addedEntries = new HashSet<>();
 			while ((resource = resourceIterator.next()) != null) {
-				Path relativePath = resource.getRelativePath();
-				if (FilesUtil.EMPTY_PATH.equals(relativePath)) {
+				if (FilesUtil.EMPTY_PATH.equals(resource.getRelativePath())) {
 					continue;
 				}
-				boolean entryIsFile = !resource.getAttributes().isDirectory();
-				String zipPath = entryIsFile ? relativePath.toString() : (relativePath.toString() + "/");
-				if (addedEntries.contains(zipPath)) {
-					if (entryIsFile) {
-						throw new BuildException("cannot overwrite packed file: " + zipPath);
-					}
-					// if duplicate dir, just silently continue
-				} else {
-					Path realPath = resource.getPath();
-					Log.debug("%s %s as %s", entryIsFile ? "Writing file" : "Adding dir", realPath, zipPath);
-					output.putNextEntry(new ZipEntry(zipPath));
-					if (entryIsFile) {
-						Files.copy(realPath, output);
-					}
-					output.closeEntry();
-					addedEntries.add(zipPath);
-				}
+				addResourceToArchive(resource, archive);
 			}
-			output.finish();
-			output.flush();
 		} catch (IOException e) {
-			throw new BuildException("error while writing the destination file", e);
+			throw new BuildException("error while writing into the archive", e);
 		}
 	}
+
+	protected abstract T openArchive(Path destinationPath) throws IOException;
+
+	protected abstract void addResourceToArchive(Resource resource, T archive) throws BuildException, IOException;
 
 	@Override
 	public ResourceIterator getResourceIterator() throws ResourceEnumerationException {
@@ -143,5 +132,4 @@ public class ZipTarget extends Target implements Resource, ResourceCollection {
 	public Path getRelativePath() {
 		return myDestinationPath.getFileName();
 	}
-
 }

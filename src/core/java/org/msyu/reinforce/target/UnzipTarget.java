@@ -6,6 +6,7 @@ import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
 import org.msyu.reinforce.resources.EagerlyCachingFileTreeResourceCollection;
 import org.msyu.reinforce.resources.Resource;
+import org.msyu.reinforce.resources.ResourceAccessException;
 import org.msyu.reinforce.resources.ResourceCollection;
 import org.msyu.reinforce.resources.ResourceDefinitionYamlParser;
 import org.msyu.reinforce.resources.ResourceEnumerationException;
@@ -83,8 +84,12 @@ public class UnzipTarget extends Target implements ResourceCollection {
 			if (zipPath == null) {
 				throw new BuildException("cannot unpack something that does not exist: " + zipPath);
 			}
-			if (!resource.getAttributes().isRegularFile()) {
-				throw new BuildException("cannot unpack something that is not a regular file: " + zipPath);
+			try {
+				if (!resource.getAttributes().isRegularFile()) {
+					throw new BuildException("cannot unpack something that is not a regular file: " + zipPath);
+				}
+			} catch (ResourceAccessException e) {
+				throw new BuildException("failed to access attributes of resource " + resource, e);
 			}
 			try (ZipFile zipFile = new ZipFile(zipPath.toString())) {
 				Enumeration<? extends ZipEntry> entries = zipFile.entries();

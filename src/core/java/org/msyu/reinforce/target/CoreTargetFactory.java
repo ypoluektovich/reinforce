@@ -2,6 +2,8 @@ package org.msyu.reinforce.target;
 
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetFactory;
+import org.msyu.reinforce.target.archive.JarTarget;
+import org.msyu.reinforce.target.archive.ZipTarget;
 
 public class CoreTargetFactory implements TargetFactory {
 
@@ -9,6 +11,7 @@ public class CoreTargetFactory implements TargetFactory {
 	public static final String SOURCE = "source";
 	public static final String JAVAC = "javac";
 	public static final String ZIP = "zip";
+	public static final String JAR = "jar";
 	public static final String UNZIP = "unzip";
 	public static final String EXEC = "exec";
 	public static final String REINFORCE = "reinforce";
@@ -25,6 +28,8 @@ public class CoreTargetFactory implements TargetFactory {
 				return new JavacTarget(name);
 			case ZIP:
 				return new ZipTarget(name);
+			case JAR:
+				return new JarTarget(name);
 			case UNZIP:
 				return new UnzipTarget(name);
 			case EXEC:

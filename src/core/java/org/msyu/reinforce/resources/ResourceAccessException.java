@@ -1,8 +1,8 @@
 package org.msyu.reinforce.resources;
 
-import org.msyu.reinforce.BuildException;
+import java.io.IOException;
 
-public class ResourceAccessException extends BuildException {
+public class ResourceAccessException extends IOException {
 
 	public ResourceAccessException() {
 	}
@@ -17,10 +17,6 @@ public class ResourceAccessException extends BuildException {
 
 	public ResourceAccessException(Throwable cause) {
 		super(cause);
-	}
-
-	public ResourceAccessException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-		super(message, cause, enableSuppression, writableStackTrace);
 	}
 
 }
