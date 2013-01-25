@@ -45,8 +45,10 @@ public class Reinforce implements TargetRepository {
 	public void executeNewBuild(Path basePath, Path sandboxPath, Iterable<String> targetNames)
 			throws InvalidTargetNameException, TargetLoadingException, BuildException
 	{
-		basePath = basePath.normalize();
+		basePath = basePath.toAbsolutePath().normalize();
 		Log.verbose("Build base path is %s", basePath);
+		sandboxPath = basePath.resolve(sandboxPath);
+		Log.verbose("Build sandbox path is %s", sandboxPath);
 		Log.verbose("Requested targets in order: %s", targetNames);
 
 		Log.info("==== %s: loading targets", this);
