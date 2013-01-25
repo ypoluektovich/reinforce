@@ -23,9 +23,13 @@ public class ReinforceTarget extends Target {
 
 	public static final String TARGETS_KEY = "targets";
 
+	public static final String SANDBOX_KEY = "sandbox path";
+
 	private Path myTargetDefLocation;
 
 	private Path myBasePath;
+
+	private Path mySandboxPath;
 
 	private final LinkedHashSet<String> myTargets = new LinkedHashSet<>();
 
@@ -36,31 +40,15 @@ public class ReinforceTarget extends Target {
 	@Override
 	protected void initTarget(Map docMap, Map<String, Target> dependencyTargetByName) throws TargetInitializationException {
 		if (docMap.containsKey(TARGET_DEFS_KEY)) {
-			Object targetDefLocation = docMap.get(TARGET_DEFS_KEY);
-			if (!(targetDefLocation instanceof String)) {
-				throw new TargetInitializationException("'" + TARGET_DEFS_KEY + "' must be a string");
-			}
-			try {
-				myTargetDefLocation = Paths.get((String) targetDefLocation);
-			} catch (InvalidPathException e) {
-				throw new TargetInitializationException("value of '" + TARGET_DEFS_KEY + "' is not a valid path", e);
-			}
-		} else {
-			myTargetDefLocation = null;
+			myTargetDefLocation = getStringAsPath(docMap, TARGET_DEFS_KEY);
 		}
 
 		if (docMap.containsKey(BASE_PATH_KEY)) {
-			Object basePath = docMap.get(BASE_PATH_KEY);
-			if (!(basePath instanceof String)) {
-				throw new TargetInitializationException("'" + BASE_PATH_KEY + "' must be a string");
-			}
-			try {
-				myBasePath = Paths.get((String) basePath);
-			} catch (InvalidPathException e) {
-				throw new TargetInitializationException("value of '" + BASE_PATH_KEY + "' is not a valid path", e);
-			}
-		} else {
-			myBasePath = null;
+			myBasePath = getStringAsPath(docMap, BASE_PATH_KEY);
+		}
+
+		if (docMap.containsKey(SANDBOX_KEY)) {
+			mySandboxPath = getStringAsPath(docMap, SANDBOX_KEY);
 		}
 
 		if (!docMap.containsKey(TARGETS_KEY)) {
@@ -84,6 +72,18 @@ public class ReinforceTarget extends Target {
 		}
 	}
 
+	private Path getStringAsPath(Map docMap, String key) throws TargetInitializationException {
+		Object basePath = docMap.get(key);
+		if (!(basePath instanceof String)) {
+			throw new TargetInitializationException(key + " must be a string");
+		}
+		try {
+			return Paths.get((String) basePath);
+		} catch (InvalidPathException e) {
+			throw new TargetInitializationException("value of '" + key + "' is not a valid path", e);
+		}
+	}
+
 	@Override
 	public void run() throws BuildException {
 		Reinforce reinforce = new Reinforce();
@@ -97,6 +97,9 @@ public class ReinforceTarget extends Target {
 					myBasePath == null ?
 							Build.getCurrent().getBasePath() :
 							Build.getCurrent().getBasePath().resolve(myBasePath),
+					Build.getCurrent().getBasePath().resolve(
+							mySandboxPath == null ? Paths.get("build") : mySandboxPath
+					),
 					myTargets
 			);
 		} catch (InvalidTargetNameException | TargetLoadingException | BuildException e) {

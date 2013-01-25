@@ -42,7 +42,7 @@ public class Reinforce implements TargetRepository {
 		return myTargetDefLocation;
 	}
 
-	public void executeNewBuild(Path basePath, Iterable<String> targetNames)
+	public void executeNewBuild(Path basePath, Path sandboxPath, Iterable<String> targetNames)
 			throws InvalidTargetNameException, TargetLoadingException, BuildException
 	{
 		basePath = basePath.normalize();
@@ -53,7 +53,7 @@ public class Reinforce implements TargetRepository {
 		myTargetLoader.load(targetNames);
 
 		Log.info("==== %s: executing targets", this);
-		new Build(this, basePath).executeOnce(targetNames);
+		new Build(this, basePath, sandboxPath).executeOnce(targetNames);
 
 		Log.info("==== %s is done!", this);
 	}

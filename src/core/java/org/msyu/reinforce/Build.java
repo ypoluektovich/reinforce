@@ -17,15 +17,20 @@ public class Build {
 
 	private final Path myBasePath;
 
+	private final Path mySandboxPath;
+
 	private final Set<Target> executedTargets = new HashSet<>();
 
-	public Build(Reinforce reinforce, Path basePath) throws BuildException {
+	private Target myCurrentTarget;
+
+	public Build(Reinforce reinforce, Path basePath, Path sandboxPath) throws BuildException {
 		this.myReinforce = reinforce;
 
 		if (!Files.isDirectory(basePath)) {
 			throw new BuildException("Specified base path is not a directory: " + basePath);
 		}
 		this.myBasePath = basePath;
+		this.mySandboxPath = basePath.resolve(sandboxPath);
 	}
 
 	public Reinforce getReinforce() {
@@ -34,6 +39,14 @@ public class Build {
 
 	public Path getBasePath() {
 		return myBasePath;
+	}
+
+	public Path getSandboxPath() {
+		return mySandboxPath;
+	}
+
+	public String getCurrentTargetName() {
+		return myCurrentTarget.getName();
 	}
 
 	public void executeOnce(Iterable<String> targetNames) throws BuildException {
@@ -56,12 +69,15 @@ public class Build {
 	public void executeNow(Target target) throws BuildException {
 		Build previousBuild = ourContextBuild.get();
 		ourContextBuild.set(this);
+		Target previousTarget = myCurrentTarget;
+		myCurrentTarget = target;
 		try {
 			Log.info("== Executing target: %s", target.getName());
 			target.run();
 			setTargetExecuted(true, target);
 			Log.info("== Executed target: %s", target.getName());
 		} finally {
+			myCurrentTarget = previousTarget;
 			ourContextBuild.set(previousBuild);
 		}
 	}

@@ -32,9 +32,18 @@ public class Main {
 			return;
 		}
 
+		Path sandboxPath;
+		try {
+			sandboxPath = Paths.get(System.getProperty("reinforce.build.sandboxPath", "build"));
+		} catch (InvalidPathException e) {
+			Log.error("Value specified as sandbox path is not a valid path");
+			System.exit(LOAD_FAILURE_EXIT_STATUS);
+			return;
+		}
+
 		try {
 			LinkedHashSet<String> targetNames = new LinkedHashSet<>(Arrays.asList(args));
-			reinforce.executeNewBuild(basePath, targetNames);
+			reinforce.executeNewBuild(basePath, sandboxPath, targetNames);
 		} catch (InvalidTargetNameException | TargetLoadingException e) {
 			e.printStackTrace();
 			System.exit(LOAD_FAILURE_EXIT_STATUS);
