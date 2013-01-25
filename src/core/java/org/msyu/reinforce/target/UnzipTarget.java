@@ -54,7 +54,7 @@ public class UnzipTarget extends Target implements ResourceCollection {
 
 	private void initializeDestination(Map docMap) throws TargetInitializationException {
 		if (!docMap.containsKey(DESTINATION_KEY)) {
-			myDestinationPath = Paths.get("build", getName());
+			myDestinationPath = null;
 			return;
 		}
 		Object destinationObject = docMap.get(DESTINATION_KEY);
@@ -67,7 +67,9 @@ public class UnzipTarget extends Target implements ResourceCollection {
 
 	@Override
 	public void run() throws BuildException {
-		Path destinationPath = Build.getCurrent().getBasePath().resolve(myDestinationPath);
+		Path destinationPath = myDestinationPath == null ?
+				Build.getCurrent().getSandboxPath().resolve(getName()) :
+				Build.getCurrent().getBasePath().resolve(myDestinationPath);
 		try {
 			FilesUtil.deleteFileTree(destinationPath);
 			Files.createDirectories(destinationPath);
@@ -104,7 +106,7 @@ public class UnzipTarget extends Target implements ResourceCollection {
 				throw new BuildException("error while unpacking " + zipPath, e);
 			}
 		}
-		myUnpackedFiles = new EagerlyCachingFileTreeResourceCollection(myDestinationPath);
+		myUnpackedFiles = new EagerlyCachingFileTreeResourceCollection(destinationPath);
 	}
 
 	@Override

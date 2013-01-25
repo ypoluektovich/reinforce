@@ -1,5 +1,6 @@
 package org.msyu.reinforce.target;
 
+import org.msyu.reinforce.Build;
 import org.msyu.reinforce.BuildException;
 import org.msyu.reinforce.Log;
 
@@ -12,7 +13,10 @@ public class ExternalJavac extends AbstractJavac {
 	protected void compileOrDie(List<String> compilerParameters) throws BuildException {
 		int exitCode;
 		try {
-			Process process = new ProcessBuilder(getCommandLineArray(compilerParameters)).inheritIO().start();
+			Process process = new ProcessBuilder(getCommandLineArray(compilerParameters))
+					.directory(Build.getCurrent().getBasePath().toFile())
+					.inheritIO()
+					.start();
 			while (true) {
 				try {
 					exitCode = process.waitFor();

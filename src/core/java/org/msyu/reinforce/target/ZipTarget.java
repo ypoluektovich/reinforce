@@ -56,7 +56,7 @@ public class ZipTarget extends Target implements Resource, ResourceCollection {
 
 	private void initializeDestination(Map docMap) throws TargetInitializationException {
 		if (!docMap.containsKey(DESTINATION_KEY)) {
-			myDestinationPath = Paths.get("build", getName() + ".zip");
+			myDestinationPath = null;
 			return;
 		}
 		Object destinationObject = docMap.get(DESTINATION_KEY);
@@ -69,7 +69,9 @@ public class ZipTarget extends Target implements Resource, ResourceCollection {
 
 	@Override
 	public void run() throws BuildException {
-		Path destinationPath = Build.getCurrent().getBasePath().resolve(myDestinationPath);
+		Path destinationPath = myDestinationPath == null ?
+				Build.getCurrent().getSandboxPath().resolve(getName() + ".zip") :
+				Build.getCurrent().getBasePath().resolve(myDestinationPath);
 		try {
 			Log.verbose("Clearing the destination path");
 			FilesUtil.deleteFileTree(destinationPath);

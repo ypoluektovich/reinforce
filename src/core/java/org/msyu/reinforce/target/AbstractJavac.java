@@ -26,10 +26,10 @@ public abstract class AbstractJavac implements JavaCompiler {
 
 	@Override
 	public Path execute(String targetName, ResourceCollection sources, ResourceCollection classpath) throws BuildException {
-		Path buildHome = Build.getCurrent().getBasePath().resolve("build");
-		Path destinationDir = buildHome.resolve(targetName);
-		Path optionsFile = buildHome.resolve(targetName + OPTIONS_FILE_NAME_SUFFIX);
-		Path sourcesFile = buildHome.resolve(targetName + SOURCES_FILE_NAME_SUFFIX);
+		Path sandboxPath = Build.getCurrent().getSandboxPath();
+		Path destinationDir = sandboxPath.resolve(targetName);
+		Path optionsFile = sandboxPath.resolve(targetName + OPTIONS_FILE_NAME_SUFFIX);
+		Path sourcesFile = sandboxPath.resolve(targetName + SOURCES_FILE_NAME_SUFFIX);
 
 		clearDestinations(destinationDir, optionsFile, sourcesFile);
 
