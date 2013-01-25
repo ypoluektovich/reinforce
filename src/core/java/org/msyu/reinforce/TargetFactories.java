@@ -1,7 +1,5 @@
 package org.msyu.reinforce;
 
-import org.msyu.reinforce.target.CoreTargetFactory;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -36,7 +34,6 @@ public class TargetFactories {
 		if (firstError != null) {
 			throw firstError;
 		}
-		ourFactories.add(new CoreTargetFactory());
 	}
 
 	public static Target createTargetObject(String targetType, String targetName) throws TargetConstructionException {
