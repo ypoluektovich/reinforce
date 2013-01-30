@@ -1,6 +1,7 @@
 package org.msyu.reinforce.target.archive;
 
 import org.msyu.reinforce.Build;
+import org.msyu.reinforce.Log;
 import org.msyu.reinforce.resources.FileSystemResource;
 import org.msyu.reinforce.resources.Resource;
 import org.msyu.reinforce.util.FilesUtil;
@@ -31,6 +32,7 @@ public class JarOutputStreamWrapper extends ZipOutputStreamWrapper {
 	}
 
 	public void addServiceLoaderDescriptor(Resource resource) {
+		Log.debug("Deferring addition of ServiceLoader config %s", resource.getRelativePath());
 		String serviceName = resource.getRelativePath().getFileName().toString();
 		List<Resource> parts;
 		if (myServiceLoaderDescriptors.containsKey(serviceName)) {
@@ -52,6 +54,8 @@ public class JarOutputStreamWrapper extends ZipOutputStreamWrapper {
 			return;
 		}
 
+		Log.debug("Flushing %d deferred ServiceLoader configs", myServiceLoaderDescriptors.size());
+
 		Path tempDir = Build.getCurrent().getSandboxPath()
 				.resolve(Build.getCurrent().getCurrentTargetName() + ".tmp")
 				.resolve(META_INF_SERVICES);
@@ -68,8 +72,10 @@ public class JarOutputStreamWrapper extends ZipOutputStreamWrapper {
 
 	private void flushServiceLoaderDescriptor(String serviceName, Path tempDir) throws IOException {
 		Path implementationListFile = tempDir.resolve(serviceName);
+		Log.debug("Writing temporary file %s", implementationListFile);
 		try (Writer out = Files.newBufferedWriter(implementationListFile, Charset.forName("UTF-8"))) {
 			for (Resource part : myServiceLoaderDescriptors.get(serviceName)) {
+				Log.debug("Reading lines from %s", part.getPath());
 				try (BufferedReader in = Files.newBufferedReader(part.getPath(), Charset.forName("UTF-8"))) {
 					String line;
 					while ((line = in.readLine()) != null) {

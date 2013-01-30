@@ -1,5 +1,6 @@
 package org.msyu.reinforce.target.archive;
 
+import org.msyu.reinforce.Log;
 import org.msyu.reinforce.resources.Resource;
 
 import java.io.BufferedOutputStream;
@@ -44,6 +45,7 @@ public class ZipOutputStreamWrapper implements Closeable {
 			}
 			// if duplicate dir, just silently continue
 		} else {
+			Log.debug("Adding entry: %s", zipPath);
 			myZipOutputStream.putNextEntry(new ZipEntry(zipPath));
 			if (entryIsFile) {
 				Files.copy(resource.getPath(), myZipOutputStream);
@@ -55,6 +57,7 @@ public class ZipOutputStreamWrapper implements Closeable {
 
 	@Override
 	public void close() throws IOException {
+		Log.debug("Finishing writing the archive");
 		myZipOutputStream.finish();
 		myZipOutputStream.close();
 	}
