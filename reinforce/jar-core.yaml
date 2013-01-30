@@ -1,0 +1,7 @@
+depends-on: [ compile-core , explode-libs-core ]
+type: jar
+source:
+ - compile-core
+ - { target: explode-libs-core , exclude: META-INF }
+ - src/core/resources
+destination: build/reinforce-core.jar

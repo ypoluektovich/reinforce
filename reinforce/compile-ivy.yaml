@@ -1,0 +1,6 @@
+type: javac
+compiler: external
+source: src/ivy/java
+classpath:
+ - build/reinforce-core.jar
+ - { location: lib, include: ivy }

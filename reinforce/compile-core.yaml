@@ -1,4 +1,4 @@
 type: javac
 compiler: external
 source: src/core/java
-classpath: { location: lib, include: .jar }
+classpath: { location: lib, include: snakeyaml }
