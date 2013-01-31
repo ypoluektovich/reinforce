@@ -18,7 +18,7 @@ public class YamlTargetLoader implements TargetRepository {
 
 	public static final Pattern NAME_PATTERN = Pattern.compile("[-\\w]+");
 
-	protected static final String TARGET_DEPENDENCY_KEY = "depends-on";
+	protected static final String TARGET_DEPENDENCY_KEY = "depends on";
 
 	private final Map<String, Target> targets = new HashMap<>();
 

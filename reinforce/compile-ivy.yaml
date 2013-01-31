@@ -1,6 +1,7 @@
+depends on: jar-core
 type: javac
 compiler: external
 source: src/ivy/java
 classpath:
- - build/reinforce-core.jar
+ - jar-core
  - { location: lib, include: ivy }

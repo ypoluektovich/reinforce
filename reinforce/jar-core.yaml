@@ -1,4 +1,4 @@
-depends-on: [ compile-core , explode-libs-core ]
+depends on: [ compile-core , explode-libs-core ]
 type: jar
 source:
  - compile-core
