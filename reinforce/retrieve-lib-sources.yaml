@@ -1,0 +1,3 @@
+type: ivy-retrieve
+save to: lib-src/[artifact]-[revision](-[classifier]).[ext]
+confs: sources

@@ -11,6 +11,8 @@ import org.msyu.reinforce.TargetInitializationException;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class IvyRetrieveTarget extends Target {
@@ -21,11 +23,15 @@ public class IvyRetrieveTarget extends Target {
 
 	public static final String SAVE_TO_KEY = "save to";
 
+	public static final String CONFS_KEY = "confs";
+
 	private Path myIvySettingsXmlPath;
 
 	private Path myIvyXmlPath;
 
 	private String mySaveTo;
+
+	private String[] myConfs;
 
 	public IvyRetrieveTarget(String name) {
 		super(name);
@@ -73,6 +79,25 @@ public class IvyRetrieveTarget extends Target {
 			// the default value mimics the behaviour of standalone mode of Ivy 2.2.0
 			mySaveTo = "lib/[conf]/[artifact].[ext]";
 		}
+		if (docMap.containsKey(CONFS_KEY)) {
+			Object confsObject = docMap.get(CONFS_KEY);
+			if (confsObject instanceof String) {
+				myConfs = new String[]{(String) confsObject};
+			} else if (confsObject instanceof List) {
+				List confsList = (List) confsObject;
+				List<String> confNames = new ArrayList<>(confsList.size());
+				for (Object confName : confsList) {
+					if (confName instanceof String) {
+						confNames.add((String) confName);
+					} else {
+						throw new TargetInitializationException("all conf names must be strings");
+					}
+				}
+				myConfs = confNames.toArray(new String[confNames.size()]);
+			} else {
+				throw new TargetInitializationException("value of '" + CONFS_KEY + "' must be a string or a list of strings");
+			}
+		}
 	}
 
 	@Override
@@ -99,10 +124,14 @@ public class IvyRetrieveTarget extends Target {
 		}
 
 		try {
+			RetrieveOptions retrieveOptions = new RetrieveOptions();
+			if (myConfs != null) {
+				retrieveOptions.setConfs(myConfs);
+			}
 			ivy.retrieve(
 					resolveReport.getModuleDescriptor().getModuleRevisionId(),
 					mySaveTo,
-					new RetrieveOptions()
+					retrieveOptions
 			);
 		} catch (Exception e) {
 			throw new BuildException("error while retrieving ivy artifacts", e);
