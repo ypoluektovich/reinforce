@@ -97,9 +97,7 @@ public class ReinforceTarget extends Target {
 					myBasePath == null ?
 							Build.getCurrent().getBasePath() :
 							Build.getCurrent().getBasePath().resolve(myBasePath),
-					Build.getCurrent().getBasePath().resolve(
-							mySandboxPath == null ? Paths.get("build") : mySandboxPath
-					),
+					mySandboxPath == null ? Paths.get("build") : mySandboxPath,
 					myTargets
 			);
 		} catch (InvalidTargetNameException | TargetLoadingException | BuildException e) {
