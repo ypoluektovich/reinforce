@@ -35,7 +35,7 @@ public abstract class AbstractJavac implements JavaCompiler {
 
 		compileOrDie(buildCompilerCommandLine(optionsFile, destinationDir, classpath, sourcesFile, sources));
 
-		return Build.getCurrent().getBasePath().relativize(destinationDir);
+		return destinationDir;
 	}
 
 	private void clearDestinations(Path destinationDir, Path optionsFile, Path sourcesFile) throws BuildException {
