@@ -80,13 +80,15 @@ public abstract class AbstractJavac implements JavaCompiler {
 				if (cpElement == null) {
 					Log.debug("Classpath is empty, skipping", destinationDir);
 				} else {
-					Log.debug("First classpath entry: %s", cpElement.getPath());
+					Path cpElementPath = Build.getCurrent().getBasePath().resolve(cpElement.getPath());
+					Log.debug("First classpath entry: %s", cpElementPath);
 					writer.write("-classpath ");
-					writer.write(cpElement.getPath().toString());
+					writer.write(cpElementPath.toString());
 					while ((cpElement = cpIterator.next()) != null) {
-						Log.debug("Next classpath entry: %s", cpElement.getPath());
+						cpElementPath = Build.getCurrent().getBasePath().resolve(cpElement.getPath());
+						Log.debug("Next classpath entry: %s", cpElementPath);
 						writer.write(":");
-						writer.write(cpElement.getPath().toString());
+						writer.write(cpElementPath.toString());
 					}
 					writer.newLine();
 					Log.debug("Classpath enumerated");
@@ -107,7 +109,7 @@ public abstract class AbstractJavac implements JavaCompiler {
 		}
 		try (BufferedWriter writer = Files.newBufferedWriter(sourcesFile, Charset.forName("UTF-8"))) {
 			do {
-				writer.write(sourceElement.toString());
+				writer.write(Build.getCurrent().getBasePath().resolve(sourceElement).toString());
 				writer.newLine();
 			} while ((sourceElement = getNextFile(resourceIterator)) != null);
 			Log.debug("Closing sources file");

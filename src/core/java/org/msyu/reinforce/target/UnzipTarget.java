@@ -80,7 +80,7 @@ public class UnzipTarget extends Target implements ResourceCollection {
 		ResourceIterator iterator = mySources.getResourceIterator();
 		Resource resource;
 		while ((resource = iterator.next()) != null) {
-			Path zipPath = resource.getPath();
+			Path zipPath = Build.getCurrent().getBasePath().resolve(resource.getPath());
 			if (zipPath == null) {
 				throw new BuildException("cannot unpack something that does not exist: " + zipPath);
 			}

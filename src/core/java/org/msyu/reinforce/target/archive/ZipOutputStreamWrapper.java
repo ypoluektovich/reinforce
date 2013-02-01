@@ -1,5 +1,6 @@
 package org.msyu.reinforce.target.archive;
 
+import org.msyu.reinforce.Build;
 import org.msyu.reinforce.Log;
 import org.msyu.reinforce.resources.Resource;
 
@@ -48,7 +49,7 @@ public class ZipOutputStreamWrapper implements Closeable {
 			Log.debug("Adding entry: %s", zipPath);
 			myZipOutputStream.putNextEntry(new ZipEntry(zipPath));
 			if (entryIsFile) {
-				Files.copy(resource.getPath(), myZipOutputStream);
+				Files.copy(Build.getCurrent().getBasePath().resolve(resource.getPath()), myZipOutputStream);
 			}
 			myZipOutputStream.closeEntry();
 			myAddedEntries.add(zipPath);

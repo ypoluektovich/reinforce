@@ -75,8 +75,9 @@ public class JarOutputStreamWrapper extends ZipOutputStreamWrapper {
 		Log.debug("Writing temporary file %s", implementationListFile);
 		try (Writer out = Files.newBufferedWriter(implementationListFile, Charset.forName("UTF-8"))) {
 			for (Resource part : myServiceLoaderDescriptors.get(serviceName)) {
-				Log.debug("Reading lines from %s", part.getPath());
-				try (BufferedReader in = Files.newBufferedReader(part.getPath(), Charset.forName("UTF-8"))) {
+				Path partPath = Build.getCurrent().getBasePath().resolve(part.getPath());
+				Log.debug("Reading lines from %s", partPath);
+				try (BufferedReader in = Files.newBufferedReader(partPath, Charset.forName("UTF-8"))) {
 					String line;
 					while ((line = in.readLine()) != null) {
 						out.write(line);
