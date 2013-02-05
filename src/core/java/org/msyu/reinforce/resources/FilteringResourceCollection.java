@@ -45,4 +45,9 @@ public class FilteringResourceCollection implements ResourceCollection {
 		return null;
 	}
 
+	@Override
+	public Resource getRoot() {
+		return null;
+	}
+
 }

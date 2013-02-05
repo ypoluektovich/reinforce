@@ -132,4 +132,10 @@ public abstract class AbstractArchiveTarget<T extends Closeable> extends Target 
 	public Path getRelativePath() {
 		return myDestinationPath.getFileName();
 	}
+
+	@Override
+	public Resource getRoot() {
+		return this;
+	}
+
 }

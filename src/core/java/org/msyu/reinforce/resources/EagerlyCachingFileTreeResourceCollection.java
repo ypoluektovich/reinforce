@@ -15,6 +15,9 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
+/**
+ * <a name="regularRoot"/>
+ */
 public class EagerlyCachingFileTreeResourceCollection extends AbstractEagerlyCachingResourceCollection {
 
 	private final Path myRootPath;
@@ -87,4 +90,10 @@ public class EagerlyCachingFileTreeResourceCollection extends AbstractEagerlyCac
 	public String toString() {
 		return super.toString() + "{" + myRootPath + "}";
 	}
+
+	@Override
+	public Resource getRoot() {
+		return new FileSystemResource(myRootPath, null, myRootPath.getFileName());
+	}
+
 }

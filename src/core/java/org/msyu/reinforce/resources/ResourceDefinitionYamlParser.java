@@ -1,6 +1,7 @@
 package org.msyu.reinforce.resources;
 
 import org.msyu.reinforce.Log;
+import org.msyu.reinforce.ReinterpretationException;
 import org.msyu.reinforce.Target;
 
 import java.nio.file.InvalidPathException;
@@ -125,11 +126,45 @@ public class ResourceDefinitionYamlParser {
 					"must specify either target or location in a resource collection map-definition");
 		}
 		if (targetObject != null) {
-			if (targetObject instanceof String) {
+			if (!(targetObject instanceof String)) {
+				throw new ResourceConstructionException("target must be referenced by its name string");
+			}
+
+			if (!defMap.containsKey("as")) {
 				Log.debug("Interpreting target as base collection...");
 				return parseTargetAsCollection((String) targetObject, targetByName);
+			}
+
+			Log.debug("Reinterpreting target as base collection...");
+			if (!targetByName.containsKey(targetObject)) {
+				throw new ResourceConstructionException("target '" + targetObject + "' is unavailable");
+			}
+			Target target = targetByName.get(targetObject);
+
+			Object interpretationSpec = defMap.get("as");
+			if (!(interpretationSpec instanceof String)) {
+				throw new ResourceConstructionException("target translation spec must be a string");
+			}
+
+			Object reinterpreted;
+			try {
+				reinterpreted = target.reinterpret((String) interpretationSpec);
+			} catch (ReinterpretationException e) {
+				throw new ResourceConstructionException(
+						"error while translating target " + target + " as " + interpretationSpec,
+						e
+				);
+			}
+			if (reinterpreted instanceof ResourceCollection) {
+				Log.debug("Reinterpreted as a resource collection");
+				return (ResourceCollection) reinterpreted;
+			} else if (reinterpreted instanceof Resource) {
+				SingleResourceCollection collection = new SingleResourceCollection((Resource) reinterpreted);
+				Log.debug("Reinterpreted as a single resource; wrapping in a collection: %s", collection);
+				return collection;
 			} else {
-				throw new ResourceConstructionException("target must be referenced by its name string");
+				throw new ResourceConstructionException("can't interpret " + reinterpreted +
+						" as a resource collection");
 			}
 		} else /* locationObject != null */ {
 			if (locationObject instanceof String) {

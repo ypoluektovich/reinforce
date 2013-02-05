@@ -8,4 +8,6 @@ public interface ResourceCollection {
 
 	List<Resource> rebuildCache() throws ResourceEnumerationException;
 
+	Resource getRoot();
+
 }

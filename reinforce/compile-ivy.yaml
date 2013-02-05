@@ -1,7 +1,7 @@
-depends on: jar-core
+depends on: compile-core
 type: javac
 compiler: external
 source: src/ivy/java
 classpath:
- - jar-core
+ - { target: compile-core, as: root }
  - { location: lib, include: ivy }

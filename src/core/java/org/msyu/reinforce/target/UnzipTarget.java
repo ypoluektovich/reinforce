@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
@@ -122,6 +123,26 @@ public class UnzipTarget extends Target implements ResourceCollection {
 	@Override
 	public List<Resource> rebuildCache() throws ResourceEnumerationException {
 		return myUnpackedFiles.rebuildCache();
+	}
+
+	@Override
+	public Resource getRoot() {
+		return new Resource() {
+			@Override
+			public Path getPath() {
+				return myUnpackedFiles.getRoot().getPath();
+			}
+
+			@Override
+			public BasicFileAttributes getAttributes() throws ResourceAccessException {
+				return myUnpackedFiles.getRoot().getAttributes();
+			}
+
+			@Override
+			public Path getRelativePath() {
+				return myUnpackedFiles.getRoot().getRelativePath();
+			}
+		};
 	}
 
 }

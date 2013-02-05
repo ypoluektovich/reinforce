@@ -2,16 +2,19 @@ package org.msyu.reinforce.target;
 
 import org.msyu.reinforce.BuildException;
 import org.msyu.reinforce.Log;
+import org.msyu.reinforce.ReinterpretationException;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
 import org.msyu.reinforce.resources.EagerlyCachingFileTreeResourceCollection;
 import org.msyu.reinforce.resources.Resource;
+import org.msyu.reinforce.resources.ResourceAccessException;
 import org.msyu.reinforce.resources.ResourceCollection;
 import org.msyu.reinforce.resources.ResourceDefinitionYamlParser;
 import org.msyu.reinforce.resources.ResourceEnumerationException;
 import org.msyu.reinforce.resources.ResourceIterator;
 
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.Map;
 
@@ -51,6 +54,7 @@ public class JavacTarget extends Target implements ResourceCollection {
 	private ResourceCollection prepareSource(Map docMap, Map<String, Target> dependencyTargetByName)
 			throws TargetInitializationException
 	{
+		Log.debug("Parsing source setting");
 		if (!docMap.containsKey(SOURCE_KEY)) {
 			throw new TargetInitializationException("missing required parameter '" + SOURCE_KEY + "'");
 		}
@@ -104,6 +108,35 @@ public class JavacTarget extends Target implements ResourceCollection {
 	@Override
 	public List<Resource> rebuildCache() throws ResourceEnumerationException {
 		return myClassFiles.rebuildCache();
+	}
+
+	@Override
+	public Resource getRoot() {
+		return new Resource() {
+			@Override
+			public Path getPath() {
+				return myClassFiles.getRoot().getPath();
+			}
+
+			@Override
+			public BasicFileAttributes getAttributes() throws ResourceAccessException {
+				return myClassFiles.getRoot().getAttributes();
+			}
+
+			@Override
+			public Path getRelativePath() {
+				return myClassFiles.getRoot().getRelativePath();
+			}
+		};
+	}
+
+	@Override
+	public Object reinterpret(String interpretationSpec) throws ReinterpretationException {
+		if ("root".equals(interpretationSpec)) {
+			return getRoot();
+		} else {
+			return super.reinterpret(interpretationSpec);
+		}
 	}
 
 }

@@ -49,4 +49,9 @@ public class EagerlyCachingUnionResourceCollection extends AbstractEagerlyCachin
 		return cache;
 	}
 
+	@Override
+	public Resource getRoot() {
+		return null;
+	}
+
 }

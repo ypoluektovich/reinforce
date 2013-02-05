@@ -1,5 +1,7 @@
 package org.msyu.reinforce.resources;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 
@@ -7,7 +9,7 @@ public class FileSystemResource implements Resource {
 
 	private final Path myPath;
 
-	private final BasicFileAttributes myAttributes;
+	private BasicFileAttributes myAttributes;
 
 	private final Path myRelativePath;
 
@@ -23,7 +25,14 @@ public class FileSystemResource implements Resource {
 	}
 
 	@Override
-	public BasicFileAttributes getAttributes() {
+	public BasicFileAttributes getAttributes() throws ResourceAccessException {
+		if (myAttributes == null) {
+			try {
+				myAttributes = Files.readAttributes(myPath, BasicFileAttributes.class);
+			} catch (IOException e) {
+				throw new ResourceAccessException("couldn't read attributes of " + myPath, e);
+			}
+		}
 		return myAttributes;
 	}
 
@@ -36,4 +45,5 @@ public class FileSystemResource implements Resource {
 	public String toString() {
 		return this.getClass().getName() + String.format("{%s -> %s}", myPath, myRelativePath);
 	}
+
 }

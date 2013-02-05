@@ -5,7 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-public abstract class Target {
+public abstract class Target implements Reinterpretable {
 
 	private final String name;
 
@@ -32,4 +32,10 @@ public abstract class Target {
 			throws TargetInitializationException;
 
 	public abstract void run() throws BuildException;
+
+	@Override
+	public Object reinterpret(String interpretationSpec) throws ReinterpretationException {
+		throw new UnknownInterpretationException(interpretationSpec);
+	}
+
 }

@@ -38,4 +38,9 @@ public class SingleResourceCollection implements Resource, ResourceCollection {
 		return Collections.singletonList(myResource);
 	}
 
+	@Override
+	public Resource getRoot() {
+		return myResource;
+	}
+
 }
