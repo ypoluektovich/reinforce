@@ -1,0 +1,9 @@
+depends on: [ compile-core , compile-ivy , explode-libs ]
+type: jar
+source:
+ - compile-core
+ - compile-ivy
+ - { target: explode-libs , exclude: META-INF }
+ - src/core/resources
+ - src/ivy/resources
+destination: build/reinforce.jar

@@ -1,0 +1,5 @@
+type: unzip
+source: { location: lib, include: jar }
+exclude:
+ - META-INF
+ - module.properties
