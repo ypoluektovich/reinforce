@@ -5,6 +5,7 @@ import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
 import org.msyu.reinforce.resources.EagerlyCachingFileTreeResourceCollection;
+import org.msyu.reinforce.resources.IncludeExcludeResourceFilter;
 import org.msyu.reinforce.resources.Resource;
 import org.msyu.reinforce.resources.ResourceAccessException;
 import org.msyu.reinforce.resources.ResourceCollection;
@@ -19,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +37,8 @@ public class UnzipTarget extends Target implements ResourceCollection {
 
 	private Path myDestinationPath;
 
+	private IncludeExcludeResourceFilter myFilter;
+
 	private ResourceCollection myUnpackedFiles;
 
 	public UnzipTarget(String name) {
@@ -45,6 +49,7 @@ public class UnzipTarget extends Target implements ResourceCollection {
 	protected void initTarget(Map docMap, Map<String, Target> dependencyTargetByName) throws TargetInitializationException {
 		initializeSources(docMap, dependencyTargetByName);
 		initializeDestination(docMap);
+		myFilter = ResourceDefinitionYamlParser.getIncludeExcludeFilter(docMap);
 	}
 
 	private void initializeSources(Map docMap, Map<String, Target> dependencyTargetByName) throws TargetInitializationException {
@@ -106,12 +111,18 @@ public class UnzipTarget extends Target implements ResourceCollection {
 			Enumeration<? extends ZipEntry> entries = zipFile.entries();
 			while (entries.hasMoreElements()) {
 				ZipEntry entry = entries.nextElement();
-				String entryName = entry.getName();
-				boolean entryIsDirectory = entryName.endsWith("/");
-				if (entryIsDirectory) {
-					Files.createDirectories(destinationPath.resolve(entryName.substring(0, entryName.length() - 1)));
+				ZipEntryResource entryResource = new ZipEntryResource(entry);
+				try {
+					if (!myFilter.fits(entryResource)) {
+						continue;
+					}
+				} catch (ResourceEnumerationException e) {
+					throw new ExecutionException("error while filtering entry '" + entry.getName() + "' of " + zipPath, e);
+				}
+				if (entry.isDirectory()) {
+					Files.createDirectories(destinationPath.resolve(entryResource.getRelativePath()));
 				} else {
-					Path entryDestinationPath = destinationPath.resolve(entryName);
+					Path entryDestinationPath = destinationPath.resolve(entryResource.getRelativePath());
 					Files.createDirectories(entryDestinationPath.getParent());
 					try (InputStream entryStream = zipFile.getInputStream(entry)) {
 						Files.copy(entryStream, entryDestinationPath);
@@ -151,6 +162,84 @@ public class UnzipTarget extends Target implements ResourceCollection {
 				return myUnpackedFiles.getRoot().getRelativePath();
 			}
 		};
+	}
+
+	private static class ZipEntryResource implements Resource {
+
+		private final ZipEntry myEntry;
+
+		private Path myRelativePath;
+
+		protected ZipEntryResource(ZipEntry entry) {
+			myEntry = entry;
+			String entryName = entry.getName();
+			myRelativePath = Paths.get(
+					myEntry.isDirectory() ?
+							entryName.substring(0, entryName.length() - 1) :
+							entryName
+			);
+		}
+
+		@Override
+		public Path getPath() {
+			return null;
+		}
+
+		@Override
+		public BasicFileAttributes getAttributes() throws ResourceAccessException {
+			return new BasicFileAttributes() {
+				@Override
+				public FileTime lastModifiedTime() {
+					return FileTime.fromMillis(myEntry.getTime());
+				}
+
+				@Override
+				public FileTime lastAccessTime() {
+					return FileTime.fromMillis(myEntry.getTime());
+				}
+
+				@Override
+				public FileTime creationTime() {
+					return FileTime.fromMillis(myEntry.getTime());
+				}
+
+				@Override
+				public boolean isRegularFile() {
+					return !myEntry.isDirectory();
+				}
+
+				@Override
+				public boolean isDirectory() {
+					return myEntry.isDirectory();
+				}
+
+				@Override
+				public boolean isSymbolicLink() {
+					return false;
+				}
+
+				@Override
+				public boolean isOther() {
+					return false;
+				}
+
+				@Override
+				public long size() {
+					return myEntry.getSize();
+				}
+
+				@Override
+				public Object fileKey() {
+					return null;
+				}
+			};
+		}
+
+		@Override
+		public Path getRelativePath() {
+			return myRelativePath;
+		}
+
 	}
 
 }

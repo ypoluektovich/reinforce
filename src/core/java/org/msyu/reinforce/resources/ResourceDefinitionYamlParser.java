@@ -97,19 +97,12 @@ public class ResourceDefinitionYamlParser {
 	private static ResourceCollection parseMapAsCollection(Map defMap, Map<String, Target> targetByName)
 			throws ResourceConstructionException {
 		ResourceCollection baseCollection = getBaseCollection(defMap, targetByName);
-		Set<ResourceFilter> includes = getResourceFilters(defMap, "include");
-		Set<ResourceFilter> excludes = getResourceFilters(defMap, "exclude");
-		if (includes.isEmpty() && excludes.isEmpty()) {
+		IncludeExcludeResourceFilter resourceFilter = getIncludeExcludeFilter(defMap);
+		if (resourceFilter == null) {
 			Log.debug("No filters, returning base collection");
 			return baseCollection;
 		} else {
-			ResourceCollection collection = new FilteringResourceCollection(
-					baseCollection,
-					new IncludeExcludeResourceFilter(
-							includes.isEmpty() ? null : new OrResourceFilter(includes),
-							excludes.isEmpty() ? null : new OrResourceFilter(excludes)
-					)
-			);
+			ResourceCollection collection = new FilteringResourceCollection(baseCollection, resourceFilter);
 			Log.debug("Creating filtering collection: %s", collection);
 			return collection;
 		}
@@ -174,6 +167,17 @@ public class ResourceDefinitionYamlParser {
 				throw new ResourceConstructionException("location must be a string (a path in file system)");
 			}
 		}
+	}
+
+	public static IncludeExcludeResourceFilter getIncludeExcludeFilter(Map defMap) throws ResourceConstructionException {
+		Set<ResourceFilter> includes = getResourceFilters(defMap, "include");
+		Set<ResourceFilter> excludes = getResourceFilters(defMap, "exclude");
+		return (includes.isEmpty() && excludes.isEmpty()) ?
+				null :
+				new IncludeExcludeResourceFilter(
+						includes.isEmpty() ? null : new OrResourceFilter(includes),
+						excludes.isEmpty() ? null : new OrResourceFilter(excludes)
+				);
 	}
 
 	private static Set<ResourceFilter> getResourceFilters(Map defMap, String filterKey)
