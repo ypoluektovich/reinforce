@@ -2,11 +2,10 @@ package org.msyu.reinforce.target;
 
 import org.msyu.reinforce.Build;
 import org.msyu.reinforce.BuildException;
-import org.msyu.reinforce.InvalidTargetNameException;
+import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.Reinforce;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
-import org.msyu.reinforce.TargetLoadingException;
 
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -85,13 +84,13 @@ public class ReinforceTarget extends Target {
 	}
 
 	@Override
-	public void run() throws BuildException {
-		Reinforce reinforce = new Reinforce();
-		reinforce.setTargetDefLocation(
+	public void run() throws ExecutionException {
+		Reinforce reinforce = new Reinforce(
 				myTargetDefLocation == null ?
 						Build.getCurrent().getReinforce().getTargetDefLocation() :
 						Build.getCurrent().getBasePath().resolve(myTargetDefLocation)
 		);
+
 		try {
 			reinforce.executeNewBuild(
 					myBasePath == null ?
@@ -100,8 +99,8 @@ public class ReinforceTarget extends Target {
 					mySandboxPath == null ? Paths.get("build") : mySandboxPath,
 					myTargets
 			);
-		} catch (InvalidTargetNameException | TargetLoadingException | BuildException e) {
-			throw new BuildException("Reinforce invocation ended with an exception", e);
+		} catch (BuildException e) {
+			throw new ExecutionException("Reinforce invocation ended with an exception", e);
 		}
 	}
 

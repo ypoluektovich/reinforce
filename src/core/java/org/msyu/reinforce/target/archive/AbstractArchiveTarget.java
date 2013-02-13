@@ -1,7 +1,7 @@
 package org.msyu.reinforce.target.archive;
 
 import org.msyu.reinforce.Build;
-import org.msyu.reinforce.BuildException;
+import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.Log;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
@@ -73,7 +73,7 @@ public abstract class AbstractArchiveTarget<T extends Closeable> extends Target 
 
 
 	@Override
-	public void run() throws BuildException {
+	public void run() throws ExecutionException {
 		Path destinationPath = myDestinationPath == null ?
 				Build.getCurrent().getSandboxPath().resolve(getName() + ".zip") :
 				Build.getCurrent().getBasePath().resolve(myDestinationPath);
@@ -83,26 +83,30 @@ public abstract class AbstractArchiveTarget<T extends Closeable> extends Target 
 			Log.verbose("Creating parent directories");
 			Files.createDirectories(destinationPath.getParent());
 		} catch (IOException e) {
-			throw new BuildException("failed to prepare the destination", e);
+			throw new ExecutionException("failed to prepare the destination", e);
 		}
 
 		try (T archive = openArchive(destinationPath)) {
-			ResourceIterator resourceIterator = mySources.getResourceIterator();
-			Resource resource;
-			while ((resource = resourceIterator.next()) != null) {
-				if (FilesUtil.EMPTY_PATH.equals(resource.getRelativePath())) {
-					continue;
+			try {
+				ResourceIterator resourceIterator = mySources.getResourceIterator();
+				Resource resource;
+				while ((resource = resourceIterator.next()) != null) {
+					if (FilesUtil.EMPTY_PATH.equals(resource.getRelativePath())) {
+						continue;
+					}
+					addResourceToArchive(resource, archive);
 				}
-				addResourceToArchive(resource, archive);
+			} catch (ResourceEnumerationException e) {
+				throw new ExecutionException("error while enumerating files to pack", e);
 			}
 		} catch (IOException e) {
-			throw new BuildException("error while writing into the archive", e);
+			throw new ExecutionException("error while writing into the archive", e);
 		}
 	}
 
 	protected abstract T openArchive(Path destinationPath) throws IOException;
 
-	protected abstract void addResourceToArchive(Resource resource, T archive) throws BuildException, IOException;
+	protected abstract void addResourceToArchive(Resource resource, T archive) throws ExecutionException, IOException;
 
 	@Override
 	public ResourceIterator getResourceIterator() throws ResourceEnumerationException {

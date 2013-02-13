@@ -1,6 +1,6 @@
 package org.msyu.reinforce.target;
 
-import org.msyu.reinforce.BuildException;
+import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.Log;
 import org.msyu.reinforce.TargetInitializationException;
 
@@ -30,7 +30,7 @@ public class InternalSunJavac extends AbstractJavac {
 	}
 
 	@Override
-	protected void compileOrDie(List<String> compilerParameters) throws BuildException {
+	protected void compileOrDie(List<String> compilerParameters) throws ExecutionException {
 		int result;
 		try {
 			Log.verbose("Invoking compiler");
@@ -39,10 +39,11 @@ public class InternalSunJavac extends AbstractJavac {
 					new Object[]{ compilerParameters.toArray(new String[compilerParameters.size()]) }
 			);
 		} catch (IllegalAccessException | InvocationTargetException e) {
-			throw new BuildException("failed to run compiler", e);
+			throw new ExecutionException("failed to run compiler", e);
 		}
+		Log.verbose("Compiler returned exit code %d", result);
 		if (result != 0) {
-			throw new BuildException("compiler exited with status code: " + result);
+			throw new ExecutionException("compiler exited with status code: " + result);
 		}
 	}
 

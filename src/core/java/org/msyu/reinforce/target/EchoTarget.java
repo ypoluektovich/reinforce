@@ -1,5 +1,6 @@
 package org.msyu.reinforce.target;
 
+import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
 
@@ -23,7 +24,7 @@ public class EchoTarget extends Target {
 	}
 
 	@Override
-	public void run() {
+	public void run() throws ExecutionException {
 		System.out.println(message);
 	}
 

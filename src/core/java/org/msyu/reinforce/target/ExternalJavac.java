@@ -1,7 +1,7 @@
 package org.msyu.reinforce.target;
 
 import org.msyu.reinforce.Build;
-import org.msyu.reinforce.BuildException;
+import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.Log;
 
 import java.io.IOException;
@@ -10,9 +10,10 @@ import java.util.List;
 public class ExternalJavac extends AbstractJavac {
 
 	@Override
-	protected void compileOrDie(List<String> compilerParameters) throws BuildException {
+	protected void compileOrDie(List<String> compilerParameters) throws ExecutionException {
 		int exitCode;
 		try {
+			Log.verbose("Starting external process...");
 			Process process = new ProcessBuilder(getCommandLineArray(compilerParameters))
 					.directory(Build.getCurrent().getBasePath().toFile())
 					.inheritIO()
@@ -26,10 +27,11 @@ public class ExternalJavac extends AbstractJavac {
 				}
 			}
 		} catch (IOException e) {
-			throw new BuildException("exception during external compiler invocation", e);
+			throw new ExecutionException("exception during external compiler invocation", e);
 		}
+		Log.verbose("Process exited with code %d", exitCode);
 		if (exitCode != 0) {
-			throw new BuildException("compiler exited with status code: " + exitCode);
+			throw new ExecutionException("compiler exited with status code: " + exitCode);
 		}
 	}
 

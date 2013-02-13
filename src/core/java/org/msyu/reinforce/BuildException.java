@@ -1,6 +1,6 @@
 package org.msyu.reinforce;
 
-public class BuildException extends Exception {
+public abstract class BuildException extends Exception {
 
 	protected BuildException() {
 	}

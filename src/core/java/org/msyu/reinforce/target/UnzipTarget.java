@@ -1,7 +1,7 @@
 package org.msyu.reinforce.target;
 
 import org.msyu.reinforce.Build;
-import org.msyu.reinforce.BuildException;
+import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
 import org.msyu.reinforce.resources.EagerlyCachingFileTreeResourceCollection;
@@ -68,7 +68,7 @@ public class UnzipTarget extends Target implements ResourceCollection {
 	}
 
 	@Override
-	public void run() throws BuildException {
+	public void run() throws ExecutionException {
 		Path destinationPath = myDestinationPath == null ?
 				Build.getCurrent().getSandboxPath().resolve(getName()) :
 				Build.getCurrent().getBasePath().resolve(myDestinationPath);
@@ -76,43 +76,51 @@ public class UnzipTarget extends Target implements ResourceCollection {
 			FilesUtil.deleteFileTree(destinationPath);
 			Files.createDirectories(destinationPath);
 		} catch (IOException e) {
-			throw new BuildException("failed to prepare directory for unpacked files", e);
+			throw new ExecutionException("failed to prepare directory for unpacked files", e);
 		}
-		ResourceIterator iterator = mySources.getResourceIterator();
-		Resource resource;
-		while ((resource = iterator.next()) != null) {
-			Path zipPath = Build.getCurrent().getBasePath().resolve(resource.getPath());
-			if (zipPath == null) {
-				throw new BuildException("cannot unpack something that does not exist: " + zipPath);
+		try {
+			ResourceIterator iterator = mySources.getResourceIterator();
+			Resource resource;
+			while ((resource = iterator.next()) != null) {
+				unpack(resource, destinationPath);
 			}
-			try {
-				if (!resource.getAttributes().isRegularFile()) {
-					throw new BuildException("cannot unpack something that is not a regular file: " + zipPath);
-				}
-			} catch (ResourceAccessException e) {
-				throw new BuildException("failed to access attributes of resource " + resource, e);
-			}
-			try (ZipFile zipFile = new ZipFile(zipPath.toString())) {
-				Enumeration<? extends ZipEntry> entries = zipFile.entries();
-				while (entries.hasMoreElements()) {
-					ZipEntry entry = entries.nextElement();
-					String entryName = entry.getName();
-					boolean entryIsDirectory = entryName.endsWith("/");
-					if (entryIsDirectory) {
-						Files.createDirectories(destinationPath.resolve(entryName.substring(0, entryName.length() - 1)));
-					} else {
-						Path entryDestinationPath = destinationPath.resolve(entryName);
-						Files.createDirectories(entryDestinationPath.getParent());
-						try (InputStream entryStream = zipFile.getInputStream(entry)) {
-							Files.copy(entryStream, entryDestinationPath);
-						}
-					}
-				}
-			} catch (IOException e) {
-				throw new BuildException("error while unpacking " + zipPath, e);
-			}
+		} catch (ResourceEnumerationException e) {
+			throw new ExecutionException("error while enumerating files to unpack", e);
 		}
 		myUnpackedFiles = new EagerlyCachingFileTreeResourceCollection(destinationPath);
+	}
+
+	private void unpack(Resource resource, Path destinationPath) throws ExecutionException {
+		Path zipPath = Build.getCurrent().getBasePath().resolve(resource.getPath());
+		if (zipPath == null) {
+			throw new ExecutionException("cannot unpack something that does not exist: " + zipPath);
+		}
+		try {
+			if (!resource.getAttributes().isRegularFile()) {
+				throw new ExecutionException("cannot unpack something that is not a regular file: " + zipPath);
+			}
+		} catch (ResourceAccessException e) {
+			throw new ExecutionException("failed to access attributes of resource " + resource, e);
+		}
+		try (ZipFile zipFile = new ZipFile(zipPath.toString())) {
+			Enumeration<? extends ZipEntry> entries = zipFile.entries();
+			while (entries.hasMoreElements()) {
+				ZipEntry entry = entries.nextElement();
+				String entryName = entry.getName();
+				boolean entryIsDirectory = entryName.endsWith("/");
+				if (entryIsDirectory) {
+					Files.createDirectories(destinationPath.resolve(entryName.substring(0, entryName.length() - 1)));
+				} else {
+					Path entryDestinationPath = destinationPath.resolve(entryName);
+					Files.createDirectories(entryDestinationPath.getParent());
+					try (InputStream entryStream = zipFile.getInputStream(entry)) {
+						Files.copy(entryStream, entryDestinationPath);
+					}
+				}
+			}
+		} catch (IOException e) {
+			throw new ExecutionException("error while unpacking " + zipPath, e);
+		}
 	}
 
 	@Override

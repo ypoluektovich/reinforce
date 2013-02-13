@@ -1,6 +1,6 @@
 package org.msyu.reinforce;
 
-public class ReinterpretationException extends TargetConstructionException {
+public class ReinterpretationException extends TargetInitializationException {
 
 	public ReinterpretationException(String message) {
 		super(message);

@@ -4,7 +4,7 @@ import org.apache.ivy.Ivy;
 import org.apache.ivy.core.report.ResolveReport;
 import org.apache.ivy.core.retrieve.RetrieveOptions;
 import org.msyu.reinforce.Build;
-import org.msyu.reinforce.BuildException;
+import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.Log;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
@@ -101,7 +101,7 @@ public class IvyRetrieveTarget extends Target {
 	}
 
 	@Override
-	public void run() throws BuildException {
+	public void run() throws ExecutionException {
 		Ivy ivy = Ivy.newInstance();
 
 		if (myIvySettingsXmlPath != null) {
@@ -109,7 +109,7 @@ public class IvyRetrieveTarget extends Target {
 			try {
 				ivy.configure(resolvedIvySettingsXml.toFile());
 			} catch (Exception e) {
-				throw new BuildException("error while loading ivy settings", e);
+				throw new ExecutionException("error while loading ivy settings", e);
 			}
 		}
 
@@ -117,10 +117,10 @@ public class IvyRetrieveTarget extends Target {
 		try {
 			resolveReport = ivy.resolve(Build.getCurrent().getBasePath().resolve(myIvyXmlPath).toFile());
 		} catch (Exception e) {
-			throw new BuildException("error while resolving ivy modules", e);
+			throw new ExecutionException("error while resolving ivy modules", e);
 		}
 		if (resolveReport.hasError()) {
-			throw new BuildException("error while resolving ivy modules");
+			throw new ExecutionException("error while resolving ivy modules");
 		}
 
 		try {
@@ -134,7 +134,7 @@ public class IvyRetrieveTarget extends Target {
 					retrieveOptions
 			);
 		} catch (Exception e) {
-			throw new BuildException("error while retrieving ivy artifacts", e);
+			throw new ExecutionException("error while retrieving ivy artifacts", e);
 		}
 	}
 

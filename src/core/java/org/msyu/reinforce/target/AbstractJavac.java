@@ -1,7 +1,7 @@
 package org.msyu.reinforce.target;
 
 import org.msyu.reinforce.Build;
-import org.msyu.reinforce.BuildException;
+import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.Log;
 import org.msyu.reinforce.resources.Resource;
 import org.msyu.reinforce.resources.ResourceAccessException;
@@ -25,7 +25,7 @@ public abstract class AbstractJavac implements JavaCompiler {
 	public static final String SOURCES_FILE_NAME_SUFFIX = ".sources";
 
 	@Override
-	public Path execute(String targetName, ResourceCollection sources, ResourceCollection classpath) throws BuildException {
+	public Path execute(String targetName, ResourceCollection sources, ResourceCollection classpath) throws ExecutionException {
 		Path sandboxPath = Build.getCurrent().getSandboxPath();
 		Path destinationDir = sandboxPath.resolve(targetName);
 		Path optionsFile = sandboxPath.resolve(targetName + OPTIONS_FILE_NAME_SUFFIX);
@@ -38,7 +38,7 @@ public abstract class AbstractJavac implements JavaCompiler {
 		return destinationDir;
 	}
 
-	private void clearDestinations(Path destinationDir, Path optionsFile, Path sourcesFile) throws BuildException {
+	private void clearDestinations(Path destinationDir, Path optionsFile, Path sourcesFile) throws ExecutionException {
 		try {
 			Log.verbose("Cleaning destinations");
 			FilesUtil.deleteFileTree(destinationDir);
@@ -46,7 +46,7 @@ public abstract class AbstractJavac implements JavaCompiler {
 			FilesUtil.deleteFileTree(optionsFile);
 			FilesUtil.deleteFileTree(sourcesFile);
 		} catch (IOException e) {
-			throw new BuildException("failed to clear destinations for compilation", e);
+			throw new ExecutionException("failed to clear destinations for compilation", e);
 		}
 	}
 
@@ -56,14 +56,15 @@ public abstract class AbstractJavac implements JavaCompiler {
 			ResourceCollection classpath,
 			Path sourcesFile,
 			ResourceCollection sources
-	) throws BuildException {
+	) throws ExecutionException {
 		Log.verbose("Preparing command line for compiler");
 		writeOptionsFile(optionsFile, destinationDir, classpath);
 		writeSourcesFile(sourcesFile, sources);
+		Log.verbose("Finished preparing compiler command line");
 		return Arrays.asList("@" + optionsFile, "@" + sourcesFile);
 	}
 
-	private void writeOptionsFile(Path optionsFile, Path destinationDir, ResourceCollection classpath) throws BuildException {
+	private void writeOptionsFile(Path optionsFile, Path destinationDir, ResourceCollection classpath) throws ExecutionException {
 		Log.debug("Writing options file: %s", optionsFile);
 		try (BufferedWriter writer = Files.newBufferedWriter(optionsFile, Charset.forName("UTF-8"))) {
 			Log.debug("Writing destination dir option: -d %s", destinationDir);
@@ -75,46 +76,54 @@ public abstract class AbstractJavac implements JavaCompiler {
 				Log.debug("No classpath");
 			} else {
 				Log.debug("Enumerating classpath entries...");
-				ResourceIterator cpIterator = classpath.getResourceIterator();
-				Resource cpElement = cpIterator.next();
-				if (cpElement == null) {
-					Log.debug("Classpath is empty, skipping", destinationDir);
-				} else {
-					Path cpElementPath = Build.getCurrent().getBasePath().resolve(cpElement.getPath());
-					Log.debug("First classpath entry: %s", cpElementPath);
-					writer.write("-classpath ");
-					writer.write(cpElementPath.toString());
-					while ((cpElement = cpIterator.next()) != null) {
-						cpElementPath = Build.getCurrent().getBasePath().resolve(cpElement.getPath());
-						Log.debug("Next classpath entry: %s", cpElementPath);
-						writer.write(":");
+				try {
+					ResourceIterator cpIterator = classpath.getResourceIterator();
+					Resource cpElement = cpIterator.next();
+					if (cpElement == null) {
+						Log.debug("Classpath is empty, skipping", destinationDir);
+					} else {
+						Path cpElementPath = Build.getCurrent().getBasePath().resolve(cpElement.getPath());
+						Log.debug("First classpath entry: %s", cpElementPath);
+						writer.write("-classpath ");
 						writer.write(cpElementPath.toString());
+						while ((cpElement = cpIterator.next()) != null) {
+							cpElementPath = Build.getCurrent().getBasePath().resolve(cpElement.getPath());
+							Log.debug("Next classpath entry: %s", cpElementPath);
+							writer.write(":");
+							writer.write(cpElementPath.toString());
+						}
+						writer.newLine();
+						Log.debug("Classpath enumerated");
 					}
-					writer.newLine();
-					Log.debug("Classpath enumerated");
+				} catch (ResourceEnumerationException e) {
+					throw new ExecutionException("error while enumerating classpath entries", e);
 				}
 			}
 			Log.debug("Closing options file");
 		} catch (IOException e) {
-			throw new BuildException("IO error while writing javac options file", e);
+			throw new ExecutionException("IO error while writing javac options file", e);
 		}
 	}
 
-	private void writeSourcesFile(Path sourcesFile, ResourceCollection sources) throws BuildException {
-		Log.debug("Writing sources file: %s", sourcesFile);
-		ResourceIterator resourceIterator = sources.getResourceIterator();
-		Path sourceElement = getNextFile(resourceIterator);
-		if (sourceElement == null) {
-			throw new BuildException("source list is empty");
-		}
-		try (BufferedWriter writer = Files.newBufferedWriter(sourcesFile, Charset.forName("UTF-8"))) {
-			do {
-				writer.write(Build.getCurrent().getBasePath().resolve(sourceElement).toString());
-				writer.newLine();
-			} while ((sourceElement = getNextFile(resourceIterator)) != null);
-			Log.debug("Closing sources file");
-		} catch (IOException e) {
-			throw new BuildException("I/O error while saving the list of files to be compiled", e);
+	private void writeSourcesFile(Path sourcesFile, ResourceCollection sources) throws ExecutionException {
+		try {
+			Log.debug("Writing sources file: %s", sourcesFile);
+			ResourceIterator resourceIterator = sources.getResourceIterator();
+			Path sourceElement = getNextFile(resourceIterator);
+			if (sourceElement == null) {
+				throw new ExecutionException("source list is empty");
+			}
+			try (BufferedWriter writer = Files.newBufferedWriter(sourcesFile, Charset.forName("UTF-8"))) {
+				do {
+					writer.write(Build.getCurrent().getBasePath().resolve(sourceElement).toString());
+					writer.newLine();
+				} while ((sourceElement = getNextFile(resourceIterator)) != null);
+				Log.debug("Closing sources file");
+			} catch (IOException e) {
+				throw new ExecutionException("I/O error while saving the list of files to be compiled", e);
+			}
+		} catch (ResourceEnumerationException e) {
+			throw new ExecutionException("error while enumerating source files", e);
 		}
 	}
 
@@ -137,6 +146,6 @@ public abstract class AbstractJavac implements JavaCompiler {
 		return null;
 	}
 
-	protected abstract void compileOrDie(List<String> compilerParameters) throws BuildException;
+	protected abstract void compileOrDie(List<String> compilerParameters) throws ExecutionException;
 
 }

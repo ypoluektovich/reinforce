@@ -3,7 +3,7 @@ package org.msyu.reinforce;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class Reinforce implements TargetRepository {
+public class Reinforce {
 
 	private static final String[] GERMAN_NUMERALS = {
 			"Zwei", "Drei", "Vier", "Funf", "Sechs", "Sieben", "Acht", "Neun", "Zehn"
@@ -13,9 +13,17 @@ public class Reinforce implements TargetRepository {
 
 	private final int myIndex;
 
-	public Reinforce() {
+	private final Path myTargetDefLocation;
+
+	private final YamlTargetLoader myTargetLoader;
+
+	public Reinforce(Path targetDefLocation) {
 		myIndex = ourIndexSource.incrementAndGet();
 		Log.info("==== %s reporting!", this.toString());
+
+		myTargetDefLocation = targetDefLocation.normalize();
+		myTargetLoader = new YamlTargetLoader(new FileSystemTargetDefinitionStreamSource(myTargetDefLocation));
+		Log.verbose("Loading targets from %s", myTargetDefLocation);
 	}
 
 	@Override
@@ -28,40 +36,19 @@ public class Reinforce implements TargetRepository {
 		return sb.toString();
 	}
 
-	private Path myTargetDefLocation;
-
-	private YamlTargetLoader myTargetLoader;
-
-	public void setTargetDefLocation(Path targetDefLocation) {
-		myTargetDefLocation = targetDefLocation.normalize();
-		myTargetLoader = new YamlTargetLoader(new FileSystemTargetDefinitionStreamSource(myTargetDefLocation));
-		Log.verbose("Loading targets from %s", myTargetDefLocation);
-	}
-
 	public Path getTargetDefLocation() {
 		return myTargetDefLocation;
 	}
 
-	public void executeNewBuild(Path basePath, Path sandboxPath, Iterable<String> targetNames)
-			throws InvalidTargetNameException, TargetLoadingException, BuildException
-	{
-		basePath = basePath.toAbsolutePath().normalize();
-		Log.verbose("Build base path is %s", basePath);
-		sandboxPath = basePath.resolve(sandboxPath);
-		Log.verbose("Build sandbox path is %s", sandboxPath);
-		Log.verbose("Requested targets in order: %s", targetNames);
-
-		Log.info("==== %s: loading targets", this);
-		myTargetLoader.load(targetNames);
-
-		Log.info("==== %s: executing targets", this);
-		new Build(this, basePath, sandboxPath).executeOnce(targetNames);
-
+	public Build executeNewBuild(Path basePath, Path sandboxPath, Iterable<String> targetNames) throws BuildException {
+		Build build = new Build(this, basePath.toAbsolutePath().normalize(), sandboxPath);
+		Log.info("Requested targets in order: %s", targetNames);
+		build.executeOnce(targetNames);
 		Log.info("==== %s is done!", this);
+		return build;
 	}
 
-	@Override
-	public Target getTarget(String name) throws NoSuchTargetException {
+	Target getTarget(String name) throws TargetDefinitionLoadingException, TargetConstructionException {
 		return myTargetLoader.getTarget(name);
 	}
 

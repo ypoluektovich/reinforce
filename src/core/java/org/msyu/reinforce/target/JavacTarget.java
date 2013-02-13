@@ -1,6 +1,6 @@
 package org.msyu.reinforce.target;
 
-import org.msyu.reinforce.BuildException;
+import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.Log;
 import org.msyu.reinforce.ReinterpretationException;
 import org.msyu.reinforce.Target;
@@ -89,14 +89,14 @@ public class JavacTarget extends Target implements ResourceCollection {
 	}
 
 	@Override
-	public void run() throws BuildException {
+	public void run() throws ExecutionException {
 		Path destinationPath = myJavaCompiler.execute(getName(), mySources, myClasspath);
 
 		myClassFiles = new EagerlyCachingFileTreeResourceCollection(destinationPath);
 		try {
 			myClassFiles.rebuildCache();
 		} catch (ResourceEnumerationException e) {
-			throw new BuildException("error while enumerating compiled class files", e);
+			throw new ExecutionException("error while enumerating compiled class files", e);
 		}
 	}
 

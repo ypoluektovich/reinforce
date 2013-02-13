@@ -11,12 +11,18 @@ public abstract class Target implements Reinterpretable {
 
 	private final Set<String> dependencyTargetNames = new LinkedHashSet<>();
 
+	private Map myDefinitionDocument;
+
 	public Target(String name) {
 		this.name = name;
 	}
 
 	void setDependencyTargetNames(Set<String> names) {
 		dependencyTargetNames.addAll(names);
+	}
+
+	void setDefinitionDocument(Map docMap) {
+		myDefinitionDocument = docMap;
 	}
 
 
@@ -28,10 +34,21 @@ public abstract class Target implements Reinterpretable {
 		return Collections.unmodifiableSet(dependencyTargetNames);
 	}
 
+
+	void init(Map<String, Target> dependencyTargetByName) throws TargetInitializationException {
+		if (myDefinitionDocument == null) {
+			return;
+		}
+		initTarget(myDefinitionDocument, dependencyTargetByName);
+		myDefinitionDocument = null;
+	}
+
 	protected abstract void initTarget(Map docMap, Map<String, Target> dependencyTargetByName)
 			throws TargetInitializationException;
 
-	public abstract void run() throws BuildException;
+
+	public abstract void run() throws ExecutionException;
+
 
 	@Override
 	public Object reinterpret(String interpretationSpec) throws ReinterpretationException {

@@ -1,6 +1,6 @@
 package org.msyu.reinforce.target.archive;
 
-import org.msyu.reinforce.BuildException;
+import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.resources.Resource;
 
 import java.io.IOException;
@@ -18,7 +18,7 @@ public class JarTarget extends AbstractArchiveTarget<JarOutputStreamWrapper> {
 	}
 
 	@Override
-	protected void addResourceToArchive(Resource resource, JarOutputStreamWrapper archive) throws BuildException, IOException {
+	protected void addResourceToArchive(Resource resource, JarOutputStreamWrapper archive) throws ExecutionException, IOException {
 		if (JarOutputStreamWrapper.META_INF_SERVICES.equals(resource.getRelativePath().getParent()) &&
 				resource.getAttributes().isRegularFile()
 		) {

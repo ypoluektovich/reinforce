@@ -1,6 +1,6 @@
 package org.msyu.reinforce;
 
-public class InvalidTargetNameException extends Exception {
+public class InvalidTargetNameException extends TargetDefinitionLoadingException {
 
 	private final String name;
 

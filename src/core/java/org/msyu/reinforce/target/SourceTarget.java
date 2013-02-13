@@ -1,6 +1,6 @@
 package org.msyu.reinforce.target;
 
-import org.msyu.reinforce.BuildException;
+import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
 import org.msyu.reinforce.resources.EagerlyCachingFileTreeResourceCollection;
@@ -39,8 +39,12 @@ public class SourceTarget extends Target implements ResourceCollection {
 	}
 
 	@Override
-	public void run() throws BuildException {
-		rebuildCache();
+	public void run() throws ExecutionException {
+		try {
+			rebuildCache();
+		} catch (ResourceEnumerationException e) {
+			throw new ExecutionException("error while enumerating source files", e);
+		}
 	}
 
 	@Override

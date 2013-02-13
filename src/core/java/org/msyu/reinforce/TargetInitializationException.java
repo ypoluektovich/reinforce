@@ -1,6 +1,6 @@
 package org.msyu.reinforce;
 
-public class TargetInitializationException extends TargetConstructionException {
+public class TargetInitializationException extends TargetLoadingException {
 
 	public TargetInitializationException(String message) {
 		super(message);

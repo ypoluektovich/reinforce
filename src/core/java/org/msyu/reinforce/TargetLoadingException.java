@@ -1,6 +1,6 @@
 package org.msyu.reinforce;
 
-public abstract class TargetLoadingException extends Exception {
+public abstract class TargetLoadingException extends BuildException {
 
 	protected TargetLoadingException() {
 	}

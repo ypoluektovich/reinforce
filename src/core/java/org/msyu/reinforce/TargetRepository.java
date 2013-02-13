@@ -2,6 +2,6 @@ package org.msyu.reinforce;
 
 public interface TargetRepository {
 
-	Target getTarget(String name) throws NoSuchTargetException;
+	Target getTarget(String name) throws TargetDefinitionLoadingException, TargetConstructionException;
 
 }

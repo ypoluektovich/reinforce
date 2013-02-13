@@ -54,7 +54,11 @@ public class JarOutputStreamWrapper extends ZipOutputStreamWrapper {
 			return;
 		}
 
-		Log.debug("Flushing %d deferred ServiceLoader configs", myServiceLoaderDescriptors.size());
+		Log.debug(
+				"Flushing %d deferred ServiceLoader config%s",
+				myServiceLoaderDescriptors.size(),
+				myServiceLoaderDescriptors.size() > 1 ? "s" : ""
+		);
 
 		Path tempDir = Build.getCurrent().getSandboxPath()
 				.resolve(Build.getCurrent().getCurrentTargetName() + ".tmp")

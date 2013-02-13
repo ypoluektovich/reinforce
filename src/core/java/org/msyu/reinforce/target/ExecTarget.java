@@ -1,7 +1,7 @@
 package org.msyu.reinforce.target;
 
 import org.msyu.reinforce.Build;
-import org.msyu.reinforce.BuildException;
+import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.Log;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
@@ -45,7 +45,7 @@ public class ExecTarget extends Target {
 	}
 
 	@Override
-	public void run() throws BuildException {
+	public void run() throws ExecutionException {
 		Log.verbose("Running external command...");
 		int exitCode;
 		try {
@@ -62,7 +62,7 @@ public class ExecTarget extends Target {
 				}
 			}
 		} catch (IOException e) {
-			throw new BuildException("exception during external compiler invocation", e);
+			throw new ExecutionException("exception during external compiler invocation", e);
 		}
 		Log.verbose("Process exited with code %d", exitCode);
 	}
