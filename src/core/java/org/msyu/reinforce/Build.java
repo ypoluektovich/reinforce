@@ -85,6 +85,7 @@ public class Build {
 			dependencyTargetByName.put(depName, depTarget);
 		}
 
+		myRequestedTargets.remove(targetName);
 		Log.info("== Initializing target: %s", targetName);
 		target.init(dependencyTargetByName);
 
