@@ -114,4 +114,14 @@ public class Build {
 		return myExecutedTargets.containsKey(targetName);
 	}
 
+	/**
+	 * Get the object for a target with the specified name that was executed in this build.
+	 *
+	 * @param targetName    the name of the target.
+	 * @return the Target object, or {@code null} if this target has not been executed in this build.
+	 */
+	public Target getExecutedTarget(String targetName) {
+		return myExecutedTargets.get(targetName);
+	}
+
 }

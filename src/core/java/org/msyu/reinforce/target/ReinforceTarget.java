@@ -4,6 +4,7 @@ import org.msyu.reinforce.Build;
 import org.msyu.reinforce.BuildException;
 import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.Reinforce;
+import org.msyu.reinforce.ReinterpretationException;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
 
@@ -13,6 +14,8 @@ import java.nio.file.Paths;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ReinforceTarget extends Target {
 
@@ -24,6 +27,8 @@ public class ReinforceTarget extends Target {
 
 	public static final String SANDBOX_KEY = "sandbox path";
 
+	public static final Pattern RESULT_OF_TARGET_PATTERN = Pattern.compile("result of (.++)");
+
 	private Path myTargetDefLocation;
 
 	private Path myBasePath;
@@ -31,6 +36,8 @@ public class ReinforceTarget extends Target {
 	private Path mySandboxPath;
 
 	private final LinkedHashSet<String> myTargets = new LinkedHashSet<>();
+
+	private Build myBuild;
 
 	public ReinforceTarget(String name) {
 		super(name);
@@ -92,7 +99,7 @@ public class ReinforceTarget extends Target {
 		);
 
 		try {
-			reinforce.executeNewBuild(
+			myBuild = reinforce.executeNewBuild(
 					myBasePath == null ?
 							Build.getCurrent().getBasePath() :
 							Build.getCurrent().getBasePath().resolve(myBasePath),
@@ -104,4 +111,18 @@ public class ReinforceTarget extends Target {
 		}
 	}
 
+	@Override
+	public Object reinterpret(String interpretationSpec) throws ReinterpretationException {
+		Matcher matcher = RESULT_OF_TARGET_PATTERN.matcher(interpretationSpec);
+		if (matcher.matches()) {
+			String targetName = matcher.group(1);
+			Target target = myBuild.getExecutedTarget(targetName);
+			if (target != null) {
+				return target;
+			}
+			throw new ReinterpretationException("target '" + targetName + "' has not been executed");
+		} else {
+			return super.reinterpret(interpretationSpec);
+		}
+	}
 }
