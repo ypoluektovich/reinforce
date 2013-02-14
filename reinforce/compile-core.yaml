@@ -1,4 +1,4 @@
-depends on: retrieve-libs-ext
+depends on: retrieve-libs
 type: javac
 compiler: external
 source: src/core/java

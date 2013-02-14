@@ -71,21 +71,31 @@ public class Build {
 		}
 		myRequestedTargets.add(targetName);
 
-		if (isTargetExecuted(targetName)) {
-			return myExecutedTargets.get(targetName);
+		Target target;
+		Map<String, Target> dependencyTargetByName;
+		try {
+			if (isTargetExecuted(targetName)) {
+				return myExecutedTargets.get(targetName);
+			}
+
+			Log.info("== Loading target: %s", targetName);
+			target = myReinforce.getTarget(targetName);
+
+			Log.info("== Processing dependencies of target: %s", targetName);
+			dependencyTargetByName = new HashMap<>();
+			for (String depName : target.getDependencyTargetNames()) {
+				Target depTarget = runRecursively(depName);
+				dependencyTargetByName.put(depName, depTarget);
+			}
+		} catch (FallbackTargetConstructionException e) {
+			String fallbackTargetName = e.getFallbackTargetName();
+			Log.info("== Could not construct target %s; falling back on %s", targetName, fallbackTargetName);
+			runRecursively(fallbackTargetName);
+			return null;
+		} finally {
+			myRequestedTargets.remove(targetName);
 		}
 
-		Log.info("== Loading target: %s", targetName);
-		Target target = myReinforce.getTarget(targetName);
-
-		Log.info("== Processing dependencies of target: %s", targetName);
-		Map<String, Target> dependencyTargetByName = new HashMap<>();
-		for (String depName : target.getDependencyTargetNames()) {
-			Target depTarget = runRecursively(depName);
-			dependencyTargetByName.put(depName, depTarget);
-		}
-
-		myRequestedTargets.remove(targetName);
 		Log.info("== Initializing target: %s", targetName);
 		target.init(dependencyTargetByName);
 

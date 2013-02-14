@@ -18,7 +18,9 @@ public class YamlTargetLoader implements TargetRepository {
 
 	public static final Pattern NAME_PATTERN = Pattern.compile("[-\\w]+");
 
-	protected static final String TARGET_DEPENDENCY_KEY = "depends on";
+	public static final String TARGET_DEPENDENCY_KEY = "depends on";
+
+	public static final String FALLBACK_KEY = "fallback";
 
 	private final Map<String, Map> myTargetDefinitions = new HashMap<>();
 
@@ -73,6 +75,7 @@ public class YamlTargetLoader implements TargetRepository {
 
 	private Target constructTarget(String targetName, Map docMap) throws TargetConstructionException {
 		Log.debug("Starting target object construction");
+		String fallbackTargetName = getFallbackTargetName(docMap);
 		try {
 			Target target = createTargetObject(docMap, targetName);
 			target.setDefinitionDocument(docMap);
@@ -85,8 +88,21 @@ public class YamlTargetLoader implements TargetRepository {
 			return target;
 		} catch (TargetConstructionException e) {
 			e.setTargetName(targetName);
-			throw e;
+			throw new FallbackTargetConstructionException(fallbackTargetName, e);
 		}
+	}
+
+	private String getFallbackTargetName(Map docMap) throws TargetConstructionException {
+		if (!docMap.containsKey(FALLBACK_KEY)) {
+			Log.debug("No fallback target specified");
+			return null;
+		}
+
+		Object fallbackTargetName = docMap.get(FALLBACK_KEY);
+		if (!(fallbackTargetName instanceof String)) {
+			throw new TargetConstructionException("fallback setting must be a string");
+		}
+		return (String) fallbackTargetName;
 	}
 
 	private Target createTargetObject(Map docMap, String targetName) throws TargetConstructionException {

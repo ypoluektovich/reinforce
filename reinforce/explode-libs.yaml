@@ -3,3 +3,4 @@ source: { location: lib, include: jar }
 exclude:
  - META-INF
  - module.properties
+ - ^fr(?:$|/)

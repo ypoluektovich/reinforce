@@ -3,7 +3,7 @@ type: jar
 source:
  - compile-core
  - compile-ivy
- - { target: explode-libs , exclude: META-INF }
+ - explode-libs
  - src/core/resources
  - src/ivy/resources
 destination: build/reinforce.jar
