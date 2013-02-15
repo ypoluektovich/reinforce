@@ -48,7 +48,7 @@ public class Reinforce {
 		return build;
 	}
 
-	Target getTarget(String name) throws TargetDefinitionLoadingException, TargetConstructionException {
+	Target getTarget(String name) throws TargetLoadingException {
 		return myTargetLoader.getTarget(name);
 	}
 
