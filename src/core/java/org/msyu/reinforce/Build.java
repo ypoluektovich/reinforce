@@ -96,21 +96,20 @@ public class Build {
 			myRequestedTargets.remove(targetName);
 		}
 
-		Log.info("== Initializing target: %s", targetName);
-		target.init(dependencyTargetByName);
-
-		execute(target);
+		execute(target, dependencyTargetByName);
 		myExecutedTargets.put(targetName, target);
 
 		return target;
 	}
 
-	private void execute(Target target) throws BuildException {
+	private void execute(Target target, Map<String, Target> dependencyTargetByName) throws BuildException {
 		Build previousBuild = ourContextBuild.get();
 		ourContextBuild.set(this);
 		Target previousTarget = myCurrentTarget;
 		myCurrentTarget = target;
 		try {
+			Log.info("== Initializing target: %s", target.getName());
+			target.init(dependencyTargetByName);
 			Log.info("== Executing target: %s", target.getName());
 			target.run();
 			myExecutedTargets.put(target.getName(), target);
