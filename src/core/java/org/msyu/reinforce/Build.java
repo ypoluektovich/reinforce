@@ -2,6 +2,7 @@ package org.msyu.reinforce;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -20,6 +21,8 @@ public class Build {
 	private final Path myBasePath;
 
 	private final Path mySandboxPath;
+
+	private final Map<String, String> myVariables = new HashMap<>();
 
 	private final Set<String> myRequestedTargets = new HashSet<>();
 
@@ -49,6 +52,10 @@ public class Build {
 
 	public Path getSandboxPath() {
 		return mySandboxPath;
+	}
+
+	public Map<String, String> getVariables() {
+		return Collections.unmodifiableMap(myVariables);
 	}
 
 	public String getCurrentTargetName() {

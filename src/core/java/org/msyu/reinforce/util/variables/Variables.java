@@ -1,5 +1,7 @@
 package org.msyu.reinforce.util.variables;
 
+import org.msyu.reinforce.Build;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -11,6 +13,10 @@ public class Variables {
 
 	private Variables() {
 		// do not instantiate
+	}
+
+	public static String expand(String source) throws VariableSubstitutionException {
+		return expand(source, Build.getCurrent().getVariables());
 	}
 
 	public static String expand(String source, Map<String, String> variables) throws VariableSubstitutionException {
