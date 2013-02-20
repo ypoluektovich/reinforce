@@ -76,7 +76,7 @@ public class Build {
 		for (String targetName : targetNames) {
 			runRecursively(targetName);
 		}
-		Log.info("==== %s is done!", this);
+		Log.info("==== %s is done!", getReinforce());
 	}
 
 	public void executeOnce(String targetName) throws BuildException {
