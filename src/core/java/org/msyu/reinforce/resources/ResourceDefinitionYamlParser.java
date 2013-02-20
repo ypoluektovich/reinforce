@@ -3,6 +3,8 @@ package org.msyu.reinforce.resources;
 import org.msyu.reinforce.Log;
 import org.msyu.reinforce.ReinterpretationException;
 import org.msyu.reinforce.Target;
+import org.msyu.reinforce.util.variables.VariableSubstitutionException;
+import org.msyu.reinforce.util.variables.Variables;
 
 import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
@@ -38,6 +40,11 @@ public class ResourceDefinitionYamlParser {
 	private static ResourceCollection parseStringAsCollection(String defString, Map<String, Target> targetByName)
 			throws ResourceConstructionException
 	{
+		try {
+			defString = Variables.expand(defString);
+		} catch (VariableSubstitutionException e) {
+			throw new ResourceConstructionException("error while expanding variables in string: " + defString, e);
+		}
 		if (targetByName.containsKey(defString)) {
 			Log.debug("Interpreting a string as a target...");
 			return parseTargetAsCollection(defString, targetByName);
