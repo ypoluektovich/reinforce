@@ -79,7 +79,7 @@ public class Variables {
 	}
 
 	private static boolean isNotEof(int c, boolean noEofOnBrace) {
-		return (c != -1) && (noEofOnBrace || (c == '}'));
+		return (c != -1) && ((c != '}') || noEofOnBrace);
 	}
 
 }
