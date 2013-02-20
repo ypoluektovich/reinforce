@@ -97,8 +97,7 @@ public class Build {
 		} catch (FallbackTargetConstructionException e) {
 			String fallbackTargetName = e.getFallbackTargetName();
 			Log.info("== Could not construct target %s; falling back on %s", targetName, fallbackTargetName);
-			runRecursively(fallbackTargetName);
-			return null;
+			return runRecursively(fallbackTargetName);
 		} finally {
 			myRequestedTargets.remove(targetName);
 		}
