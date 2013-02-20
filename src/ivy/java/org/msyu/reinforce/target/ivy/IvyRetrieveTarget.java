@@ -17,6 +17,8 @@ import org.msyu.reinforce.resources.ResourceCollection;
 import org.msyu.reinforce.resources.ResourceEnumerationException;
 import org.msyu.reinforce.resources.ResourceIterator;
 import org.msyu.reinforce.resources.ResourceListCollection;
+import org.msyu.reinforce.util.variables.VariableSubstitutionException;
+import org.msyu.reinforce.util.variables.Variables;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -94,7 +96,14 @@ public class IvyRetrieveTarget extends Target implements ResourceCollection {
 		if (docMap.containsKey(IVY_XML_KEY)) {
 			Object ivyXmlString = docMap.get(IVY_XML_KEY);
 			if (ivyXmlString instanceof String) {
-				myIvyXmlPath = Paths.get((String) ivyXmlString);
+				try {
+					myIvyXmlPath = Paths.get(Variables.expand((String) ivyXmlString));
+				} catch (VariableSubstitutionException e) {
+					throw new TargetInitializationException(
+							"error while expanding variables in '" + IVY_XML_KEY + "' setting",
+							e
+					);
+				}
 			} else {
 				throw new TargetInitializationException("value of '" + IVY_XML_KEY + "' must be a string");
 			}
