@@ -1,5 +1,6 @@
+depends on: retrieve-libs
 type: unzip
-source: { location: lib, include: jar }
+source: retrieve-libs
 exclude:
  - META-INF
  - module.properties
