@@ -1,5 +1,7 @@
 package org.msyu.reinforce;
 
+import org.msyu.reinforce.util.variables.VariableOverwriteException;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -58,18 +60,27 @@ public class Build {
 		return Collections.unmodifiableMap(myVariables);
 	}
 
+	public void setVariable(String name, String value) throws VariableOverwriteException {
+		if (myVariables.containsKey(name)) {
+			throw new VariableOverwriteException(name);
+		}
+		myVariables.put(name, value);
+	}
+
 	public String getCurrentTargetName() {
 		return myCurrentTarget.getName();
 	}
 
 	public void executeOnce(Iterable<String> targetNames) throws BuildException {
+		Log.info("==== Requested targets in order: %s", targetNames);
 		for (String targetName : targetNames) {
 			runRecursively(targetName);
 		}
+		Log.info("==== %s is done!", this);
 	}
 
 	public void executeOnce(String targetName) throws BuildException {
-		runRecursively(targetName);
+		executeOnce(Collections.singletonList(targetName));
 	}
 
 	private Target runRecursively(String targetName) throws BuildException {

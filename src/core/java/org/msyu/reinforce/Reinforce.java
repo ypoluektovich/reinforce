@@ -1,6 +1,7 @@
 package org.msyu.reinforce;
 
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Reinforce {
@@ -40,11 +41,19 @@ public class Reinforce {
 		return myTargetDefLocation;
 	}
 
-	public Build executeNewBuild(Path basePath, Path sandboxPath, Iterable<String> targetNames) throws BuildException {
+	public Build executeNewBuild(
+			Path basePath,
+			Path sandboxPath,
+			Map<String, String> variables,
+			Iterable<String> targetNames
+	) throws BuildException {
 		Build build = new Build(this, basePath.toAbsolutePath().normalize(), sandboxPath);
-		Log.info("Requested targets in order: %s", targetNames);
+		if (variables != null) {
+			for (Map.Entry<String, String> variable : variables.entrySet()) {
+				build.setVariable(variable.getKey(), variable.getValue());
+			}
+		}
 		build.executeOnce(targetNames);
-		Log.info("==== %s is done!", this);
 		return build;
 	}
 

@@ -7,10 +7,13 @@ import org.msyu.reinforce.Reinforce;
 import org.msyu.reinforce.ReinterpretationException;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
+import org.msyu.reinforce.util.variables.VariableSubstitutionException;
+import org.msyu.reinforce.util.variables.Variables;
 
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +30,8 @@ public class ReinforceTarget extends Target {
 
 	public static final String SANDBOX_KEY = "sandbox path";
 
+	public static final String VARIABLES_KEY = "variables";
+
 	public static final Pattern RESULT_OF_TARGET_PATTERN = Pattern.compile("result of (.++)");
 
 	private Path myTargetDefLocation;
@@ -34,6 +39,8 @@ public class ReinforceTarget extends Target {
 	private Path myBasePath;
 
 	private Path mySandboxPath;
+
+	private Map<String, String> myVariables;
 
 	private final LinkedHashSet<String> myTargets = new LinkedHashSet<>();
 
@@ -60,6 +67,8 @@ public class ReinforceTarget extends Target {
 		if (!docMap.containsKey(TARGETS_KEY)) {
 			throw new TargetInitializationException("missing required parameter: " + TARGETS_KEY);
 		}
+
+		initVariables(docMap);
 
 		myTargets.clear();
 		Object targets = docMap.get(TARGETS_KEY);
@@ -90,6 +99,38 @@ public class ReinforceTarget extends Target {
 		}
 	}
 
+	private void initVariables(Map docMap) throws TargetInitializationException {
+		if (!docMap.containsKey(VARIABLES_KEY)) {
+			return;
+		}
+		myVariables = new HashMap<>();
+		Object variableDefs = docMap.get(VARIABLES_KEY);
+		if (!(variableDefs instanceof Map)) {
+			throw newVariableInitializationException();
+		}
+		for (Map.Entry<?, ?> variable : ((Map<?, ?>) variableDefs).entrySet()) {
+			if (variable.getKey() instanceof String && variable.getValue() instanceof String) {
+				try {
+					myVariables.put(
+							Variables.expand((String) variable.getKey()),
+							Variables.expand((String) variable.getValue())
+					);
+				} catch (VariableSubstitutionException e) {
+					throw new TargetInitializationException(
+							"error while expanding variables in '" + VARIABLES_KEY + "' setting",
+							e
+					);
+				}
+			} else {
+				throw newVariableInitializationException();
+			}
+		}
+	}
+
+	private TargetInitializationException newVariableInitializationException() {
+		return new TargetInitializationException("variable definitions must be specified as a string-string mapping");
+	}
+
 	@Override
 	public void run() throws ExecutionException {
 		Reinforce reinforce = new Reinforce(
@@ -104,6 +145,7 @@ public class ReinforceTarget extends Target {
 							Build.getCurrent().getBasePath() :
 							Build.getCurrent().getBasePath().resolve(myBasePath),
 					mySandboxPath == null ? Paths.get("build") : mySandboxPath,
+					myVariables,
 					myTargets
 			);
 		} catch (BuildException e) {

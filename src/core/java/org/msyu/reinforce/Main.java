@@ -33,7 +33,7 @@ public class Main {
 
 		try {
 			LinkedHashSet<String> targetNames = new LinkedHashSet<>(Arrays.asList(args));
-			reinforce.executeNewBuild(basePath, sandboxPath, targetNames);
+			reinforce.executeNewBuild(basePath, sandboxPath, null, targetNames);
 		} catch (BuildException e) {
 			e.printStackTrace();
 			System.exit(ERROR_EXIT_STATUS);
