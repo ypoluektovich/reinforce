@@ -1,12 +1,9 @@
 package org.msyu.reinforce.target.ivy;
 
 import org.apache.ivy.Ivy;
-import org.apache.ivy.core.event.EventManager;
-import org.apache.ivy.core.event.IvyEvent;
-import org.apache.ivy.core.event.IvyListener;
-import org.apache.ivy.core.event.retrieve.EndRetrieveArtifactEvent;
 import org.apache.ivy.core.report.ResolveReport;
 import org.apache.ivy.core.retrieve.RetrieveOptions;
+import org.apache.ivy.core.retrieve.RetrieveReport;
 import org.apache.ivy.util.DefaultMessageLogger;
 import org.apache.ivy.util.Message;
 import org.msyu.reinforce.Build;
@@ -21,6 +18,7 @@ import org.msyu.reinforce.resources.ResourceEnumerationException;
 import org.msyu.reinforce.resources.ResourceIterator;
 import org.msyu.reinforce.resources.ResourceListCollection;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -141,8 +139,7 @@ public class IvyRetrieveTarget extends Target implements ResourceCollection {
 
 	@Override
 	public void run() throws ExecutionException {
-		List<Resource> retrievedFiles = new ArrayList<>();
-		Ivy ivy = getIvyObject(retrievedFiles);
+		Ivy ivy = getIvyObject();
 
 		if (myIvySettingsXmlPath != null) {
 			Path resolvedIvySettingsXml = Build.getCurrent().getBasePath().resolve(myIvySettingsXmlPath);
@@ -163,58 +160,39 @@ public class IvyRetrieveTarget extends Target implements ResourceCollection {
 			throw new ExecutionException("error while resolving ivy modules");
 		}
 
+		RetrieveReport retrieveReport;
 		try {
 			RetrieveOptions retrieveOptions = new RetrieveOptions();
-
-			/*
-			Ivy 2.2.0 (and, AFAIK, 2.3.0) does not report in any way artifacts
-			that do not need to be copied (are up-to-date). To make the
-			retrieved files collection fill up properly, we're forcing the
-			artifacts to be overwritten regardless of their current state
-			(and, therefore, to be reported via events).
-			*/
-			retrieveOptions.setOverwriteMode(RetrieveOptions.OVERWRITEMODE_ALWAYS);
-
+			retrieveOptions.setDestArtifactPattern(mySaveTo);
 			if (myConfs != null) {
 				retrieveOptions.setConfs(myConfs);
 			}
-			ivy.retrieve(
+			retrieveReport = ivy.retrieve(
 					resolveReport.getModuleDescriptor().getModuleRevisionId(),
-					mySaveTo,
 					retrieveOptions
 			);
 		} catch (Exception e) {
 			throw new ExecutionException("error while retrieving ivy artifacts", e);
 		}
 
-		myRetrievedFiles = new ResourceListCollection(retrievedFiles);
+		myRetrievedFiles = getRetrievedResourceCollection(retrieveReport);
 	}
 
-	private Ivy getIvyObject(List<Resource> retrievedFiles) {
+	private ResourceListCollection getRetrievedResourceCollection(RetrieveReport retrieveReport) {
+		Path retrieveRoot = retrieveReport.getRetrieveRoot().toPath().toAbsolutePath();
+		List<Resource> retrievedFiles = new ArrayList<>();
+		for (Object file : retrieveReport.getRetrievedFiles()) {
+			Path path = ((File) file).toPath().toAbsolutePath();
+			retrievedFiles.add(new FileSystemResource(path, null, retrieveRoot.relativize(path)));
+		}
+		return new ResourceListCollection(retrievedFiles);
+	}
+
+	private Ivy getIvyObject() {
 		Ivy ivy = new Ivy();
-		ivy.setEventManager(getEventManager(retrievedFiles));
 		ivy.bind();
 		ivy.getLoggerEngine().pushLogger(new DefaultMessageLogger(myIvyLoggingLevel));
 		return ivy;
-	}
-
-	private EventManager getEventManager(final List<Resource> retrievedFiles) {
-		EventManager eventManager = new EventManager();
-		eventManager.addIvyListener(
-				new IvyListener() {
-					@Override
-					public void progress(IvyEvent event) {
-						if (!(event instanceof EndRetrieveArtifactEvent)) {
-							return;
-						}
-						Path artifactPath = ((EndRetrieveArtifactEvent) event).getDestFile().toPath().toAbsolutePath();
-						Log.debug("Retrieved artifact: %s", artifactPath);
-						retrievedFiles.add(new FileSystemResource(artifactPath, null, artifactPath.getFileName()));
-					}
-				},
-				EndRetrieveArtifactEvent.NAME
-		);
-		return eventManager;
 	}
 
 	@Override

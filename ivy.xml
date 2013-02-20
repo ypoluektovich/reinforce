@@ -13,7 +13,7 @@
             <conf name="master" mapped="master"/>
             <conf name="sources" mapped="sources"/>
         </dependency>
-        <dependency org="org.apache.ivy" name="ivy" rev="2.2.0" transitive="false">
+        <dependency org="org.apache.ivy" name="ivy" rev="2.3.0" transitive="false">
             <conf name="master" mapped="master"/>
             <conf name="sources" mapped="sources"/>
         </dependency>

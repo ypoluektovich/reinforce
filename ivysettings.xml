@@ -1,9 +1,6 @@
 <ivysettings>
-    <settings defaultResolver="nexus"/>
+    <settings defaultResolver="maven2"/>
     <resolvers>
-        <chain name="nexus">
-            <ibiblio name="nexus-releases" m2compatible="true" root="https://oss.sonatype.org/service/local/repositories/releases/content"/>
-            <ibiblio name="nexus-central" m2compatible="true" root="https://oss.sonatype.org/service/local/repositories/central/content"/>
-        </chain>
+        <ibiblio name="maven2" m2compatible="true"/>
     </resolvers>
 </ivysettings>
