@@ -2,4 +2,4 @@ depends on: retrieve-libs
 type: javac
 compiler: external
 source: src/core/java
-classpath: { location: lib, include: snakeyaml }
+classpath: { target: retrieve-libs, include: snakeyaml }

@@ -1,2 +1,4 @@
-type: exec
-command: ./retrieve.lib.sh
+depends on: retrieve-libs-ext-runIvy
+type: source
+location: lib
+include: \.jar$
