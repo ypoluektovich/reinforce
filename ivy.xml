@@ -6,6 +6,7 @@
     <configurations defaultconf="master">
         <conf name="master"/>
         <conf name="sources"/>
+        <conf name="test"/>
     </configurations>
 
     <dependencies>
@@ -17,6 +18,7 @@
             <conf name="master" mapped="master"/>
             <conf name="sources" mapped="sources"/>
         </dependency>
+        <dependency org="junit" name="junit" rev="4.11" conf="test->default;sources->sources"/>
     </dependencies>
 
 </ivy-module>
