@@ -45,12 +45,18 @@ public class Reinforce {
 			Path basePath,
 			Path sandboxPath,
 			Map<String, String> variables,
+			Map<String, Target> inheritedTargets,
 			Iterable<String> targetNames
 	) throws BuildException {
 		Build build = new Build(this, basePath.toAbsolutePath().normalize(), sandboxPath);
 		if (variables != null) {
 			for (Map.Entry<String, String> variable : variables.entrySet()) {
 				build.setVariable(variable.getKey(), variable.getValue());
+			}
+		}
+		if (inheritedTargets != null) {
+			for (Map.Entry<String, Target> inheritedTarget : inheritedTargets.entrySet()) {
+				build.setExecutedTarget(inheritedTarget.getKey(), inheritedTarget.getValue());
 			}
 		}
 		build.executeOnce(targetNames);

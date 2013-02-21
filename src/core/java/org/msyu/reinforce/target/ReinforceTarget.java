@@ -13,7 +13,9 @@ import org.msyu.reinforce.util.variables.Variables;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +34,8 @@ public class ReinforceTarget extends Target {
 
 	public static final String VARIABLES_KEY = "variables";
 
+	public static final String INHERIT_TARGETS_KEY = "inherit targets";
+
 	public static final Pattern RESULT_OF_TARGET_PATTERN = Pattern.compile("result of (.++)");
 
 	private Path myTargetDefLocation;
@@ -41,6 +45,8 @@ public class ReinforceTarget extends Target {
 	private Path mySandboxPath;
 
 	private Map<String, String> myVariables;
+
+	private Map<String, Target> myInheritedTargets;
 
 	private final LinkedHashSet<String> myTargets = new LinkedHashSet<>();
 
@@ -69,6 +75,8 @@ public class ReinforceTarget extends Target {
 		}
 
 		initVariables(docMap);
+
+		initInheritedTargets(docMap, dependencyTargetByName);
 
 		myTargets.clear();
 		Object targets = docMap.get(TARGETS_KEY);
@@ -131,6 +139,42 @@ public class ReinforceTarget extends Target {
 		return new TargetInitializationException("variable definitions must be specified as a string-string mapping");
 	}
 
+
+	@SuppressWarnings("unchecked")
+	private void initInheritedTargets(Map docMap, Map<String, Target> dependencyTargetByName) throws TargetInitializationException {
+		if (!docMap.containsKey(INHERIT_TARGETS_KEY)) {
+			return;
+		}
+		myInheritedTargets = new HashMap<>();
+		Object inheritedTargetList = docMap.get(INHERIT_TARGETS_KEY);
+		if (inheritedTargetList instanceof List) {
+			for (Object inheritedTargetName : new HashSet((List) inheritedTargetList)) {
+				addInheritedTarget(inheritedTargetName, dependencyTargetByName);
+			}
+		} else {
+			addInheritedTarget(inheritedTargetList, dependencyTargetByName);
+		}
+	}
+
+	private void addInheritedTarget(Object inheritedTargetDef, Map<String, Target> dependencyTargetByName) throws TargetInitializationException {
+		if (!(inheritedTargetDef instanceof String)) {
+			throw new TargetInitializationException(
+					"value of '" + INHERIT_TARGETS_KEY + "' setting must be a string or a list of strings");
+		}
+		if (!dependencyTargetByName.containsKey(inheritedTargetDef)) {
+			throw new TargetInitializationException(
+					"target with name '" + inheritedTargetDef + "' is not available as a dependency for inheritance");
+		}
+		String inheritedTargetName = null;
+		try {
+			inheritedTargetName = Variables.expand((String) inheritedTargetDef);
+		} catch (VariableSubstitutionException e) {
+			throw new TargetInitializationException("error while expanding inherited target name", e);
+		}
+		myInheritedTargets.put(inheritedTargetName, dependencyTargetByName.get(inheritedTargetName));
+	}
+
+
 	@Override
 	public void run() throws ExecutionException {
 		Reinforce reinforce = new Reinforce(
@@ -146,6 +190,7 @@ public class ReinforceTarget extends Target {
 							Build.getCurrent().getBasePath().resolve(myBasePath),
 					mySandboxPath == null ? Paths.get("build") : mySandboxPath,
 					myVariables,
+					myInheritedTargets == null ? null : Collections.unmodifiableMap(myInheritedTargets),
 					myTargets
 			);
 		} catch (BuildException e) {

@@ -153,4 +153,14 @@ public class Build {
 		return myExecutedTargets.get(targetName);
 	}
 
+	public void setExecutedTarget(String name, Target target) throws ExecutionException {
+		if (name == null) {
+			throw new ExecutionException("target name must be non-null");
+		}
+		if (target == null) {
+			throw new ExecutionException("target object must be non-null");
+		}
+		myExecutedTargets.put(name, target);
+	}
+
 }
