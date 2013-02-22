@@ -4,6 +4,7 @@ import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetFactory;
 import org.msyu.reinforce.target.archive.JarTarget;
 import org.msyu.reinforce.target.archive.ZipTarget;
+import org.msyu.reinforce.target.javac.JavacTarget;
 
 public class CoreTargetFactory implements TargetFactory {
 

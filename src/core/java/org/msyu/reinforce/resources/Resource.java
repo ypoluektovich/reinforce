@@ -83,7 +83,7 @@ public interface Resource {
 	 *     <li>
 	 *         Special resources that represent single files (that are not part of any natural file tree; see,
 	 *         for example, {@linkplain org.msyu.reinforce.target.archive.AbstractArchiveTarget archive targets})
-	 *         or locations (e.g. the {@link org.msyu.reinforce.target.JavacTarget JavacTarget}
+	 *         or locations (e.g. the {@link org.msyu.reinforce.target.javac.JavacTarget JavacTarget}
 	 *         {@linkplain org.msyu.reinforce.target.archive.AbstractArchiveTarget#reinterpret(String) interpreted} as
 	 *         {@code "root"}) usually have their respective {@linkplain java.nio.file.Path#getFileName() file names}
 	 *         as relative path.

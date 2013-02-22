@@ -1,4 +1,4 @@
-package org.msyu.reinforce.target;
+package org.msyu.reinforce.target.javac;
 
 import org.msyu.reinforce.Build;
 import org.msyu.reinforce.ExecutionException;
