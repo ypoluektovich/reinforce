@@ -4,12 +4,13 @@ import org.msyu.reinforce.Build;
 import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
+import org.msyu.reinforce.resources.Collections;
 import org.msyu.reinforce.resources.EagerlyCachingFileTreeResourceCollection;
+import org.msyu.reinforce.resources.FilterFromMap;
 import org.msyu.reinforce.resources.IncludeExcludeResourceFilter;
 import org.msyu.reinforce.resources.Resource;
 import org.msyu.reinforce.resources.ResourceAccessException;
 import org.msyu.reinforce.resources.ResourceCollection;
-import org.msyu.reinforce.resources.ResourceDefinitionYamlParser;
 import org.msyu.reinforce.resources.ResourceEnumerationException;
 import org.msyu.reinforce.resources.ResourceIterator;
 import org.msyu.reinforce.util.FilesUtil;
@@ -47,16 +48,16 @@ public class UnzipTarget extends Target implements ResourceCollection {
 
 	@Override
 	protected void initTarget(Map docMap, Map<String, Target> dependencyTargetByName) throws TargetInitializationException {
-		initializeSources(docMap, dependencyTargetByName);
+		initializeSources(docMap);
 		initializeDestination(docMap);
-		myFilter = ResourceDefinitionYamlParser.getIncludeExcludeFilter(docMap);
+		myFilter = FilterFromMap.interpretIncludeExclude(docMap);
 	}
 
-	private void initializeSources(Map docMap, Map<String, Target> dependencyTargetByName) throws TargetInitializationException {
+	private void initializeSources(Map docMap) throws TargetInitializationException {
 		if (!docMap.containsKey(SOURCE_KEY)) {
 			throw new TargetInitializationException("missing required parameter '" + SOURCE_KEY + "'");
 		}
-		mySources = ResourceDefinitionYamlParser.parseAsCollection(docMap.get(SOURCE_KEY), dependencyTargetByName);
+		mySources = Collections.interpret(docMap.get(SOURCE_KEY));
 	}
 
 	private void initializeDestination(Map docMap) throws TargetInitializationException {

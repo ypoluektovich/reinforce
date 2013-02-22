@@ -5,11 +5,11 @@ import org.msyu.reinforce.Log;
 import org.msyu.reinforce.ReinterpretationException;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
+import org.msyu.reinforce.resources.Collections;
 import org.msyu.reinforce.resources.EagerlyCachingFileTreeResourceCollection;
 import org.msyu.reinforce.resources.Resource;
 import org.msyu.reinforce.resources.ResourceAccessException;
 import org.msyu.reinforce.resources.ResourceCollection;
-import org.msyu.reinforce.resources.ResourceDefinitionYamlParser;
 import org.msyu.reinforce.resources.ResourceEnumerationException;
 import org.msyu.reinforce.resources.ResourceIterator;
 
@@ -47,26 +47,22 @@ public class JavacTarget extends Target implements ResourceCollection {
 			throws TargetInitializationException
 	{
 		myJavaCompiler = prepareCompiler(docMap);
-		mySources = prepareSource(docMap, dependencyTargetByName);
-		myClasspath = prepareClasspath(docMap, dependencyTargetByName);
+		mySources = prepareSource(docMap);
+		myClasspath = prepareClasspath(docMap);
 	}
 
-	private ResourceCollection prepareSource(Map docMap, Map<String, Target> dependencyTargetByName)
-			throws TargetInitializationException
-	{
+	private ResourceCollection prepareSource(Map docMap) throws TargetInitializationException {
 		Log.debug("Parsing source setting");
 		if (!docMap.containsKey(SOURCE_KEY)) {
 			throw new TargetInitializationException("missing required parameter '" + SOURCE_KEY + "'");
 		}
-		return ResourceDefinitionYamlParser.parseAsCollection(docMap.get(SOURCE_KEY), dependencyTargetByName);
+		return Collections.interpret(docMap.get(SOURCE_KEY));
 	}
 
-	private ResourceCollection prepareClasspath(Map docMap, Map<String, Target> dependencyTargetByName)
-			throws TargetInitializationException
-	{
+	private ResourceCollection prepareClasspath(Map docMap) throws TargetInitializationException {
 		if (docMap.containsKey(CLASSPATH_KEY)) {
 			Log.debug("Parsing classpath setting");
-			return ResourceDefinitionYamlParser.parseAsCollection(docMap.get(CLASSPATH_KEY), dependencyTargetByName);
+			return Collections.interpret(docMap.get(CLASSPATH_KEY));
 		} else {
 			Log.debug("No classpath has been set");
 			return null;

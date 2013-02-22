@@ -153,6 +153,17 @@ public class Build {
 		return myExecutedTargets.get(targetName);
 	}
 
+	/**
+	 * Get the names of all targets executed in this {@code Build}.
+	 *
+	 * The collection returned by this method is a defensive copy.
+	 *
+	 * @return the set of executed target names.
+	 */
+	public Set<String> getExecutedTargetNames() {
+		return new HashSet<>(myExecutedTargets.keySet());
+	}
+
 	public void setExecutedTarget(String name, Target target) throws ExecutionException {
 		if (name == null) {
 			throw new ExecutionException("target name must be non-null");
