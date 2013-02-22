@@ -17,11 +17,13 @@ public class CollectionFromString {
 
 
 	public static ResourceCollection interpret(String defString) throws ResourceConstructionException {
+		Log.debug("Interpreting a string: '%s'...", defString);
 		try {
 			defString = Variables.expand(defString);
 		} catch (VariableSubstitutionException e) {
 			throw new ResourceConstructionException("error while expanding variables in string: " + defString, e);
 		}
+		Log.debug("String after variable expansion: '%s'...", defString);
 		if (Build.getCurrent().getExecutedTargetNames().contains(defString)) {
 			return interpretTarget(defString);
 		} else {

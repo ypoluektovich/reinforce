@@ -4,7 +4,6 @@ import org.msyu.reinforce.Build;
 import org.msyu.reinforce.Log;
 import org.msyu.reinforce.Reinterpretable;
 import org.msyu.reinforce.ReinterpretationException;
-import org.msyu.reinforce.util.BooleanFromString;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,6 +21,7 @@ public class CollectionFromMap {
 
 
 	public static ResourceCollection interpret(Map defMap) throws ResourceConstructionException {
+		Log.debug("Interpreting a map...");
 		ResourceCollection baseCollection = interpretBase(defMap);
 		ResourceFilter resourceFilter = FilterFromMap.interpret(defMap);
 		if (resourceFilter == null) {
@@ -54,11 +54,12 @@ public class CollectionFromMap {
 		if (matchedItems.isEmpty()) {
 			boolean allowEmpty = false;
 			if (defMap.containsKey("allow empty")) {
-				Boolean setting = BooleanFromString.parseUncertain(defMap.get("allow empty"));
-				if (setting == null) {
+				Object setting = defMap.get("allow empty");
+				if (setting instanceof Boolean) {
+					allowEmpty = (boolean) setting;
+				} else {
 					throw new ResourceConstructionException("'allow empty' must be a boolean");
 				}
-				allowEmpty = setting;
 			}
 			if (allowEmpty) {
 				Log.debug("Returning an empty collection");
@@ -96,9 +97,13 @@ public class CollectionFromMap {
 		}
 
 		List<Object> matchedTargets = new ArrayList<>();
+		Log.debug("Matching target names with %s", matcher);
 		for (String targetName : Build.getCurrent().getExecutedTargetNames()) {
 			if (matcher.fits(targetName)) {
+				Log.debug("%s fits", targetName);
 				matchedTargets.add(Build.getCurrent().getExecutedTarget(targetName));
+			} else {
+				Log.debug("%s does not fit", targetName);
 			}
 		}
 		return matchedTargets;
@@ -123,6 +128,11 @@ public class CollectionFromMap {
 			return Objects.equals(myTargetString, string);
 		}
 
+		@Override
+		public String toString() {
+			return this.getClass().getName() + "{" + myTargetString + "}";
+		}
+
 	}
 
 	private static class RegexMatcher implements StringMatcher {
@@ -138,6 +148,10 @@ public class CollectionFromMap {
 			return myPattern.matcher(string).find();
 		}
 
+		@Override
+		public String toString() {
+			return this.getClass().getName() + "{" + myPattern.pattern() + "}";
+		}
 	}
 
 	private static List<Object> matchLocations(Object locationObject, Map defMap) throws ResourceConstructionException {

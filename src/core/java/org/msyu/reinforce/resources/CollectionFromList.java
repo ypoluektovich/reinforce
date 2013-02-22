@@ -14,6 +14,7 @@ public class CollectionFromList {
 
 
 	public static ResourceCollection interpret(List defList) throws ResourceConstructionException {
+		Log.debug("Interpreting a list...");
 		Map<ResourceCollection, ResourceTranslation> translationByCollection = new LinkedHashMap<>();
 		Log.debug("List has %d items, iterating...", defList.size());
 		for (int i = 0; i < defList.size(); i++) {

@@ -171,6 +171,7 @@ public class Build {
 		if (target == null) {
 			throw new ExecutionException("target object must be non-null");
 		}
+		Log.debug("Set executed target: '%s' -> %s", name, target);
 		myExecutedTargets.put(name, target);
 	}
 
