@@ -2,8 +2,8 @@ package org.msyu.reinforce.resources;
 
 import org.msyu.reinforce.Build;
 import org.msyu.reinforce.Log;
-import org.msyu.reinforce.Reinterpretable;
 import org.msyu.reinforce.ReinterpretationException;
+import org.msyu.reinforce.util.ReinterpretableUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -167,29 +167,18 @@ public class CollectionFromMap {
 
 	private static List<Object> reinterpret(List<Object> matchedItems, Object interpretationSpec) throws ResourceConstructionException {
 		Log.debug("Reinterpreting items...");
-		if (!(interpretationSpec instanceof String)) {
-			throw new ResourceConstructionException("reinterpretation specification must be a string");
-		}
 		List<Object> reinterpretedItems = new ArrayList<>(matchedItems.size());
 		for (Object matchedItem : matchedItems) {
-			reinterpretedItems.add(reinterpret(matchedItem, (String) interpretationSpec));
-		}
-		return reinterpretedItems;
-	}
-
-	private static Object reinterpret(Object matchedItem, String interpretationSpec) throws ResourceConstructionException {
-		if (matchedItem instanceof Reinterpretable) {
 			try {
-				return ((Reinterpretable) matchedItem).reinterpret(interpretationSpec);
+				reinterpretedItems.add(ReinterpretableUtil.reinterpret(matchedItem, interpretationSpec));
 			} catch (ReinterpretationException e) {
 				throw new ResourceConstructionException(
 						"error while reinterpreting " + matchedItem + " as " + interpretationSpec,
 						e
 				);
 			}
-		} else {
-			throw new ResourceConstructionException("can't reinterpret non-Reinterpretable item: " + matchedItem);
 		}
+		return reinterpretedItems;
 	}
 
 	private static ResourceCollection wrapInCollection(List<Object> items) throws ResourceConstructionException {
@@ -207,7 +196,7 @@ public class CollectionFromMap {
 			}
 		}
 		if (!resources.isEmpty()) {
-			Log.debug("Wrapping %d resources in a collection...");
+			Log.debug("Wrapping %d resources in a collection...", resources.size());
 			collections.add(new ResourceListCollection(resources));
 		}
 		if (collections.size() == 1) {
