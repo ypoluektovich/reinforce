@@ -7,7 +7,6 @@ import org.msyu.reinforce.util.ReinterpretableUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -73,7 +72,7 @@ public class CollectionFromMap {
 			matchedItems = reinterpret(matchedItems, defMap.get("as"));
 		}
 
-		return wrapInCollection(matchedItems);
+		return ResourceCollections.wrapInCollection(matchedItems);
 	}
 
 	private static List<Object> matchTargets(Object targetObject, Map defMap) throws ResourceConstructionException {
@@ -179,36 +178,6 @@ public class CollectionFromMap {
 			}
 		}
 		return reinterpretedItems;
-	}
-
-	private static ResourceCollection wrapInCollection(List<Object> items) throws ResourceConstructionException {
-		List<ResourceCollection> collections = new ArrayList<>();
-		List<Resource> resources = new ArrayList<>();
-		for (Object item : items) {
-			if (item instanceof ResourceCollection) {
-				Log.debug("Treating %s as a resource collection...", item);
-				collections.add((ResourceCollection) item);
-			} else if (item instanceof Resource) {
-				Log.debug("Treating %s as a single resource (to be wrapped later)...", item);
-				resources.add((Resource) item);
-			} else {
-				throw new ResourceConstructionException("unable to cast or wrap " + item + " as a ResourceCollection");
-			}
-		}
-		if (!resources.isEmpty()) {
-			Log.debug("Wrapping %d resources in a collection...", resources.size());
-			collections.add(new ResourceListCollection(resources));
-		}
-		if (collections.size() == 1) {
-			Log.debug("Returning a single collection");
-			return collections.get(0);
-		}
-		Log.debug("Returning %d collections wrapped in a union collection", collections.size());
-		Map<ResourceCollection, ResourceTranslation> translationMap = new HashMap<>();
-		for (ResourceCollection collection : collections) {
-			translationMap.put(collection, null);
-		}
-		return new EagerlyCachingUnionResourceCollection(translationMap);
 	}
 
 }

@@ -5,7 +5,7 @@ import org.msyu.reinforce.Log;
 import org.msyu.reinforce.ReinterpretationException;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
-import org.msyu.reinforce.resources.Collections;
+import org.msyu.reinforce.resources.ResourceCollections;
 import org.msyu.reinforce.resources.EagerlyCachingFileTreeResourceCollection;
 import org.msyu.reinforce.resources.Resource;
 import org.msyu.reinforce.resources.ResourceAccessException;
@@ -56,13 +56,13 @@ public class JavacTarget extends Target implements ResourceCollection {
 		if (!docMap.containsKey(SOURCE_KEY)) {
 			throw new TargetInitializationException("missing required parameter '" + SOURCE_KEY + "'");
 		}
-		return Collections.interpret(docMap.get(SOURCE_KEY));
+		return ResourceCollections.interpret(docMap.get(SOURCE_KEY));
 	}
 
 	private ResourceCollection prepareClasspath(Map docMap) throws TargetInitializationException {
 		if (docMap.containsKey(CLASSPATH_KEY)) {
 			Log.debug("Parsing classpath setting");
-			return Collections.interpret(docMap.get(CLASSPATH_KEY));
+			return ResourceCollections.interpret(docMap.get(CLASSPATH_KEY));
 		} else {
 			Log.debug("No classpath has been set");
 			return null;

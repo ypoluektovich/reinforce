@@ -19,7 +19,7 @@ public class CollectionFromList {
 		Log.debug("List has %d items, iterating...", defList.size());
 		for (int i = 0; i < defList.size(); i++) {
 			Log.debug("Interpreting item %d...", i + 1);
-			translationByCollection.put(Collections.interpret(defList.get(i)), null);
+			translationByCollection.put(ResourceCollections.interpret(defList.get(i)), null);
 		}
 		ResourceCollection collection = new EagerlyCachingUnionResourceCollection(translationByCollection);
 		Log.debug("Interpreted all items, creating a union collection: %s", collection);

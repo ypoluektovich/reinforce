@@ -5,7 +5,7 @@ import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.Log;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
-import org.msyu.reinforce.resources.Collections;
+import org.msyu.reinforce.resources.ResourceCollections;
 import org.msyu.reinforce.resources.Resource;
 import org.msyu.reinforce.resources.ResourceAccessException;
 import org.msyu.reinforce.resources.ResourceCollection;
@@ -51,7 +51,7 @@ public abstract class AbstractArchiveTarget<T extends Closeable> extends Target 
 		if (!docMap.containsKey(SOURCE_KEY)) {
 			throw new TargetInitializationException("missing required parameter '" + SOURCE_KEY + "'");
 		}
-		mySources = Collections.interpret(docMap.get(SOURCE_KEY));
+		mySources = ResourceCollections.interpret(docMap.get(SOURCE_KEY));
 	}
 
 	private void initializeDestination(Map docMap) throws TargetInitializationException {
