@@ -88,7 +88,11 @@ public class YamlTargetLoader implements TargetRepository {
 			return target;
 		} catch (TargetConstructionException e) {
 			e.setTargetName(targetName);
-			throw new FallbackTargetConstructionException(fallbackTargetName, e);
+			if (fallbackTargetName != null) {
+				throw new FallbackTargetConstructionException(fallbackTargetName, e);
+			} else {
+				throw e;
+			}
 		}
 	}
 
