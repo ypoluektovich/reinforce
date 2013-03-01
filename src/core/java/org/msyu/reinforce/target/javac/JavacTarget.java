@@ -5,11 +5,11 @@ import org.msyu.reinforce.Log;
 import org.msyu.reinforce.ReinterpretationException;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
-import org.msyu.reinforce.resources.ResourceCollections;
-import org.msyu.reinforce.resources.EagerlyCachingFileTreeResourceCollection;
+import org.msyu.reinforce.resources.FileCollections;
 import org.msyu.reinforce.resources.Resource;
 import org.msyu.reinforce.resources.ResourceAccessException;
 import org.msyu.reinforce.resources.ResourceCollection;
+import org.msyu.reinforce.resources.ResourceCollections;
 import org.msyu.reinforce.resources.ResourceEnumerationException;
 import org.msyu.reinforce.resources.ResourceIterator;
 
@@ -88,7 +88,7 @@ public class JavacTarget extends Target implements ResourceCollection {
 	public void run() throws ExecutionException {
 		Path destinationPath = myJavaCompiler.execute(getName(), mySources, myClasspath);
 
-		myClassFiles = new EagerlyCachingFileTreeResourceCollection(destinationPath);
+		myClassFiles = FileCollections.fromPath(destinationPath);
 		try {
 			myClassFiles.rebuildCache();
 		} catch (ResourceEnumerationException e) {
@@ -133,6 +133,11 @@ public class JavacTarget extends Target implements ResourceCollection {
 		} else {
 			return super.reinterpret(interpretationSpec);
 		}
+	}
+
+	@Override
+	public boolean isEmpty() throws ResourceEnumerationException {
+		return myClassFiles.isEmpty();
 	}
 
 }

@@ -67,4 +67,9 @@ public class SourceTarget extends Target implements ResourceCollection {
 		};
 	}
 
+	@Override
+	public boolean isEmpty() throws ResourceEnumerationException {
+		return myResourceCollection.isEmpty();
+	}
+
 }

@@ -50,4 +50,9 @@ public class FilteringResourceCollection implements ResourceCollection {
 		return null;
 	}
 
+	@Override
+	public boolean isEmpty() throws ResourceEnumerationException {
+		return getResourceIterator().next() == null;
+	}
+
 }

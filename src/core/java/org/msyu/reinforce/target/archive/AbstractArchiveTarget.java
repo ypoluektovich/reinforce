@@ -142,4 +142,9 @@ public abstract class AbstractArchiveTarget<T extends Closeable> extends Target 
 		return this;
 	}
 
+	@Override
+	public final boolean isEmpty() {
+		return false;
+	}
+
 }

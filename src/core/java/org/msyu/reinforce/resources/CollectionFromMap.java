@@ -6,13 +6,14 @@ import org.msyu.reinforce.ReinterpretationException;
 import org.msyu.reinforce.util.ReinterpretableUtil;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
 public class CollectionFromMap {
+
+	public static final String ALLOW_EMPTY_KEY = "allow empty";
 
 	private CollectionFromMap() {
 		// do not instantiate
@@ -52,12 +53,12 @@ public class CollectionFromMap {
 
 		if (matchedItems.isEmpty()) {
 			boolean allowEmpty = false;
-			if (defMap.containsKey("allow empty")) {
-				Object setting = defMap.get("allow empty");
+			if (defMap.containsKey(ALLOW_EMPTY_KEY)) {
+				Object setting = defMap.get(ALLOW_EMPTY_KEY);
 				if (setting instanceof Boolean) {
 					allowEmpty = (boolean) setting;
 				} else {
-					throw new ResourceConstructionException("'allow empty' must be a boolean");
+					throw new ResourceConstructionException("'" + ALLOW_EMPTY_KEY + "' must be a boolean");
 				}
 			}
 			if (allowEmpty) {
@@ -154,14 +155,20 @@ public class CollectionFromMap {
 	}
 
 	private static List<Object> matchLocations(Object locationObject, Map defMap) throws ResourceConstructionException {
-		if (locationObject instanceof String) {
-			Log.debug("Interpreting location as base collection...");
-			return Collections.<Object>singletonList(
-					CollectionFromString.interpretLocation((String) locationObject)
-			);
-		} else {
+		Log.debug("Interpreting location as base collection...");
+		if (!(locationObject instanceof String)) {
 			throw new ResourceConstructionException("location must be a string (a path in file system)");
 		}
+		List<Object> matchedItems = new ArrayList<>();
+		ResourceCollection collection = CollectionFromString.interpretLocation((String) locationObject);
+		try {
+			if (!collection.isEmpty()) {
+				matchedItems.add(collection);
+			}
+		} catch (ResourceEnumerationException e) {
+			throw new ResourceConstructionException("couldn't check collection emptiness", e);
+		}
+		return matchedItems;
 	}
 
 	private static List<Object> reinterpret(List<Object> matchedItems, Object interpretationSpec) throws ResourceConstructionException {

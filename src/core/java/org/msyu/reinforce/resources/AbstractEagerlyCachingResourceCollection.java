@@ -33,4 +33,9 @@ public abstract class AbstractEagerlyCachingResourceCollection implements Resour
 
 	protected abstract List<Resource> innerRebuildCache() throws ResourceEnumerationException;
 
+	@Override
+	public final boolean isEmpty() throws ResourceEnumerationException {
+		return getResourceIterator().next() == null;
+	}
+
 }

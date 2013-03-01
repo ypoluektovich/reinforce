@@ -8,7 +8,15 @@ public class ResourceListCollection implements ResourceCollection {
 
 	private final List<Resource> myResources;
 
-	public ResourceListCollection(List<Resource> resources) {
+	public ResourceListCollection(List<Resource> resources) throws NullPointerException {
+		if (resources == null) {
+			throw new NullPointerException("resource list must be nonnull");
+		}
+		for (Resource resource : resources) {
+			if (resource == null) {
+				throw new NullPointerException("resources in the resource list must be nonnull");
+			}
+		}
 		myResources = new ArrayList<>(resources);
 	}
 
@@ -25,6 +33,11 @@ public class ResourceListCollection implements ResourceCollection {
 	@Override
 	public Resource getRoot() {
 		return null;
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return myResources.isEmpty();
 	}
 
 }

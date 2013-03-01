@@ -7,6 +7,7 @@ import org.msyu.reinforce.util.variables.VariableSubstitutionException;
 import org.msyu.reinforce.util.variables.Variables;
 
 import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class CollectionFromString {
@@ -48,13 +49,15 @@ public class CollectionFromString {
 
 	static ResourceCollection interpretLocation(String defString) throws ResourceConstructionException {
 		Log.debug("Interpreting a string as a file system location...");
+
+		Path rootPath;
 		try {
-			ResourceCollection collection = new EagerlyCachingFileTreeResourceCollection(Paths.get(defString));
-			Log.debug("Creating a file tree resource collection: %s", collection);
-			return collection;
+			rootPath = Paths.get(defString);
 		} catch (InvalidPathException e) {
 			throw new ResourceConstructionException("path is invalid: " + defString);
 		}
+
+		return FileCollections.fromPath(rootPath);
 	}
 
 }

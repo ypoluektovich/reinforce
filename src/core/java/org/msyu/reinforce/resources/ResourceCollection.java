@@ -10,4 +10,6 @@ public interface ResourceCollection {
 
 	Resource getRoot();
 
+	boolean isEmpty() throws ResourceEnumerationException;
+
 }

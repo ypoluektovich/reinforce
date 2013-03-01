@@ -4,13 +4,13 @@ import org.msyu.reinforce.Build;
 import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
-import org.msyu.reinforce.resources.ResourceCollections;
-import org.msyu.reinforce.resources.EagerlyCachingFileTreeResourceCollection;
+import org.msyu.reinforce.resources.FileCollections;
 import org.msyu.reinforce.resources.FilterFromMap;
 import org.msyu.reinforce.resources.IncludeExcludeResourceFilter;
 import org.msyu.reinforce.resources.Resource;
 import org.msyu.reinforce.resources.ResourceAccessException;
 import org.msyu.reinforce.resources.ResourceCollection;
+import org.msyu.reinforce.resources.ResourceCollections;
 import org.msyu.reinforce.resources.ResourceEnumerationException;
 import org.msyu.reinforce.resources.ResourceIterator;
 import org.msyu.reinforce.util.FilesUtil;
@@ -93,7 +93,7 @@ public class UnzipTarget extends Target implements ResourceCollection {
 		} catch (ResourceEnumerationException e) {
 			throw new ExecutionException("error while enumerating files to unpack", e);
 		}
-		myUnpackedFiles = new EagerlyCachingFileTreeResourceCollection(destinationPath);
+		myUnpackedFiles = FileCollections.fromPath(destinationPath);
 	}
 
 	private void unpack(Resource resource, Path destinationPath) throws ExecutionException {
@@ -164,6 +164,12 @@ public class UnzipTarget extends Target implements ResourceCollection {
 			}
 		};
 	}
+
+	@Override
+	public boolean isEmpty() throws ResourceEnumerationException {
+		return myUnpackedFiles.isEmpty();
+	}
+
 
 	private static class ZipEntryResource implements Resource {
 

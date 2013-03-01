@@ -21,4 +21,9 @@ public class EmptyResourceCollection implements ResourceCollection {
 		return null;
 	}
 
+	@Override
+	public boolean isEmpty() {
+		return true;
+	}
+
 }

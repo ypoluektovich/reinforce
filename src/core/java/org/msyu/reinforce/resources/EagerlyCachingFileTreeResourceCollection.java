@@ -22,7 +22,7 @@ public class EagerlyCachingFileTreeResourceCollection extends AbstractEagerlyCac
 
 	private final Path myRootPath;
 
-	public EagerlyCachingFileTreeResourceCollection(Path rootPath) {
+	protected EagerlyCachingFileTreeResourceCollection(Path rootPath) {
 		myRootPath = rootPath;
 	}
 

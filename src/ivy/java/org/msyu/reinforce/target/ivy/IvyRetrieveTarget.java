@@ -219,4 +219,9 @@ public class IvyRetrieveTarget extends Target implements ResourceCollection {
 		return myRetrievedFiles.getRoot();
 	}
 
+	@Override
+	public boolean isEmpty() throws ResourceEnumerationException {
+		return myRetrievedFiles.isEmpty();
+	}
+
 }

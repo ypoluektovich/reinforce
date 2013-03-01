@@ -9,7 +9,10 @@ public class SingleResourceCollection implements Resource, ResourceCollection {
 
 	private final Resource myResource;
 
-	public SingleResourceCollection(Resource resource) {
+	public SingleResourceCollection(Resource resource) throws NullPointerException {
+		if (resource == null) {
+			throw new NullPointerException("can't construct SingleResourceCollection with null resource");
+		}
 		myResource = resource;
 	}
 
@@ -41,6 +44,11 @@ public class SingleResourceCollection implements Resource, ResourceCollection {
 	@Override
 	public Resource getRoot() {
 		return myResource;
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return false;
 	}
 
 }
