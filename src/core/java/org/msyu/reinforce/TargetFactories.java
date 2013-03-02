@@ -36,9 +36,9 @@ public class TargetFactories {
 		}
 	}
 
-	public static Target createTargetObject(String targetType, String targetName) throws TargetConstructionException {
+	public static Target createTargetObject(String targetType, TargetInvocation targetInvocation) throws TargetConstructionException {
 		for (TargetFactory factory : ourFactories) {
-			Target targetObject = factory.createTargetObject(targetType, targetName);
+			Target targetObject = factory.createTargetObject(targetType, targetInvocation);
 			if (targetObject != null) {
 				return targetObject;
 			}

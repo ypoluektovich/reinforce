@@ -4,11 +4,11 @@ import org.msyu.reinforce.TargetLoadingException;
 
 public class VariableSubstitutionException extends TargetLoadingException {
 
-	public VariableSubstitutionException(String message) {
+	protected VariableSubstitutionException(String message) {
 		super(message);
 	}
 
-	public VariableSubstitutionException(String message, Throwable cause) {
+	protected VariableSubstitutionException(String message, Throwable cause) {
 		super(message, cause);
 	}
 

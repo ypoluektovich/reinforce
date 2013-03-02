@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 public class Main {
 
@@ -31,9 +32,16 @@ public class Main {
 			return;
 		}
 
+		LinkedHashSet<String> targetNames = new LinkedHashSet<>(Arrays.asList(args));
+		List<TargetInvocation> invocations = TargetInvocation.parse(targetNames);
+		if (invocations.contains(null)) {
+			Log.error("Invalid target invocation spec at position %d", invocations.indexOf(null));
+			System.exit(ERROR_EXIT_STATUS);
+			return;
+		}
+
 		try {
-			LinkedHashSet<String> targetNames = new LinkedHashSet<>(Arrays.asList(args));
-			reinforce.executeNewBuild(basePath, sandboxPath, null, null, targetNames);
+			reinforce.executeNewBuild(basePath, sandboxPath, null, null, invocations);
 		} catch (BuildException e) {
 			e.printStackTrace();
 			System.exit(ERROR_EXIT_STATUS);

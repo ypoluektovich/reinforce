@@ -3,6 +3,7 @@ package org.msyu.reinforce.target;
 import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
+import org.msyu.reinforce.TargetInvocation;
 import org.msyu.reinforce.resources.ResourceCollections;
 import org.msyu.reinforce.resources.Resource;
 import org.msyu.reinforce.resources.ResourceAccessException;
@@ -19,12 +20,12 @@ public class SourceTarget extends Target implements ResourceCollection {
 
 	private ResourceCollection myResourceCollection;
 
-	public SourceTarget(String name) {
-		super(name);
+	public SourceTarget(TargetInvocation invocation) {
+		super(invocation);
 	}
 
 	@Override
-	protected void initTarget(Map docMap, Map<String, Target> dependencyTargetByName) throws TargetInitializationException {
+	protected void initTarget(Map docMap) throws TargetInitializationException {
 		myResourceCollection = ResourceCollections.interpret(docMap);
 	}
 

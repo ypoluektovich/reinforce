@@ -2,7 +2,7 @@ package org.msyu.reinforce;
 
 public class TargetConstructionException extends TargetLoadingException {
 
-	private String targetName = "(unknown name)";
+	private TargetInvocation myTargetInvocation;
 
 	public TargetConstructionException(String message) {
 		super(message);
@@ -17,14 +17,16 @@ public class TargetConstructionException extends TargetLoadingException {
 	}
 
 
-	public void setTargetName(String targetName) {
-		this.targetName = targetName;
+	public void setInvocation(TargetInvocation invocation) {
+		myTargetInvocation = invocation;
 	}
 
 
 	@Override
 	public String getMessage() {
-		return "Could not construct target " + targetName + ": " + super.getMessage();
+		return "Could not construct target " +
+				(myTargetInvocation != null ? myTargetInvocation : "(unknown invocation)") +
+				": " + super.getMessage();
 	}
 
 }

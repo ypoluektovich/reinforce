@@ -1,4 +1,0 @@
-fallback: retrieve-libs-ext
-type: ivy-retrieve
-confs: master
-save to: lib/[artifact]-[revision].[ext]

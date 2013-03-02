@@ -6,4 +6,8 @@ public class InvalidTargetDependencyException extends TargetConstructionExceptio
 		super(message);
 	}
 
+	public InvalidTargetDependencyException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
 }

@@ -3,6 +3,7 @@ package org.msyu.reinforce.resources;
 import org.msyu.reinforce.Build;
 import org.msyu.reinforce.Log;
 import org.msyu.reinforce.Target;
+import org.msyu.reinforce.TargetInvocation;
 import org.msyu.reinforce.util.variables.VariableSubstitutionException;
 import org.msyu.reinforce.util.variables.Variables;
 
@@ -25,16 +26,20 @@ public class CollectionFromString {
 			throw new ResourceConstructionException("error while expanding variables in string: " + defString, e);
 		}
 		Log.debug("String after variable expansion: '%s'...", defString);
-		if (Build.getCurrent().getExecutedTargetNames().contains(defString)) {
-			return interpretTarget(defString);
+		TargetInvocation invocation = TargetInvocation.parse(defString);
+		if (invocation != null) {
+			return interpretTarget(invocation);
 		} else {
 			return interpretLocation(defString);
 		}
 	}
 
-	private static ResourceCollection interpretTarget(String defString) throws ResourceConstructionException {
-		Log.debug("Interpreting a string as a target name...");
-		Target target = Build.getCurrent().getExecutedTarget(defString);
+	private static ResourceCollection interpretTarget(TargetInvocation invocation) throws ResourceConstructionException {
+		Log.debug("Interpreting a string as a target invocation spec...");
+		if (!Build.getCurrent().getExecutedTargets().contains(invocation)) {
+			throw new ResourceConstructionException("specified target has not been executed");
+		}
+		Target target = Build.getCurrent().getExecutedTarget(invocation);
 		if (target instanceof ResourceCollection) {
 			Log.debug("Target is a resource collection");
 			return (ResourceCollection) target;
@@ -43,7 +48,7 @@ public class CollectionFromString {
 			Log.debug("Target is a single resource; wrapping in a collection: %s", collection);
 			return collection;
 		} else {
-			throw new ResourceConstructionException("can't interpret target '" + defString + "' as a resource collection");
+			throw new ResourceConstructionException("can't interpret target '" + invocation + "' as a resource collection");
 		}
 	}
 

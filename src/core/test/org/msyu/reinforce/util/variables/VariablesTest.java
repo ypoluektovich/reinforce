@@ -24,7 +24,7 @@ public class VariablesTest {
 				"src/core/java",
 				Variables.expand(
 						"src/${module.name}/java",
-						VARIABLES
+						Variables.sourceFromMap(VARIABLES)
 				)
 		);
 	}

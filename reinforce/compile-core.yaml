@@ -1,5 +1,0 @@
-depends on: retrieve-libs
-type: javac
-compiler: external
-source: src/core/java
-classpath: { target: retrieve-libs, include: snakeyaml }

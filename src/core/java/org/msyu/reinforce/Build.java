@@ -1,6 +1,8 @@
 package org.msyu.reinforce;
 
 import org.msyu.reinforce.util.variables.VariableOverwriteException;
+import org.msyu.reinforce.util.variables.VariableSource;
+import org.msyu.reinforce.util.variables.Variables;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,9 +28,9 @@ public class Build {
 
 	private final Map<String, String> myVariables = new HashMap<>();
 
-	private final Set<String> myRequestedTargets = new HashSet<>();
+	private final Set<TargetInvocation> myRequestedTargets = new HashSet<>();
 
-	private final Map<String, Target> myExecutedTargets = new HashMap<>();
+	private final Map<TargetInvocation, Target> myExecutedTargets = new HashMap<>();
 
 	private Target myCurrentTarget;
 
@@ -56,8 +58,17 @@ public class Build {
 		return mySandboxPath;
 	}
 
-	public Map<String, String> getVariables() {
-		return Collections.unmodifiableMap(myVariables);
+	public VariableSource getBuildVariables() {
+		return Variables.sourceFromMap(myVariables);
+	}
+
+	public VariableSource getContextVariables() {
+		return (myCurrentTarget == null) ?
+				getBuildVariables() :
+				Variables.sourceFromChain(
+						Variables.sourceFromMap(myCurrentTarget.getInvocation().getParameters()),
+						getBuildVariables()
+				);
 	}
 
 	public void setVariable(String name, String value) throws VariableOverwriteException {
@@ -68,89 +79,85 @@ public class Build {
 	}
 
 	public String getCurrentTargetName() {
-		return myCurrentTarget.getName();
+		return myCurrentTarget.getInvocation().getTargetName();
 	}
 
-	public void executeOnce(Iterable<String> targetNames) throws BuildException {
-		Log.info("==== Requested targets in order: %s", targetNames);
-		for (String targetName : targetNames) {
-			runRecursively(targetName);
+	public void executeOnce(TargetInvocation targetInvocation) throws BuildException {
+		executeOnce(Collections.singletonList(targetInvocation));
+	}
+
+	public void executeOnce(Iterable<TargetInvocation> targetInvocations) throws BuildException {
+		Log.info("==== Requested targets in order: %s", targetInvocations);
+		for (TargetInvocation targetInvocation : targetInvocations) {
+			runRecursively(targetInvocation);
 		}
 		Log.info("==== %s is done!", getReinforce());
 	}
 
-	public void executeOnce(String targetName) throws BuildException {
-		executeOnce(Collections.singletonList(targetName));
-	}
-
-	private Target runRecursively(String targetName) throws BuildException {
-		if (myRequestedTargets.contains(targetName)) {
-			throw new CyclicTargetDependencyException(targetName);
+	private Target runRecursively(TargetInvocation targetInvocation) throws BuildException {
+		if (myRequestedTargets.contains(targetInvocation)) {
+			throw new CyclicTargetDependencyException(targetInvocation);
 		}
-		myRequestedTargets.add(targetName);
+		myRequestedTargets.add(targetInvocation);
 
 		Target target;
-		Map<String, Target> dependencyTargetByName;
 		try {
-			if (isTargetExecuted(targetName)) {
-				return myExecutedTargets.get(targetName);
+			if (isTargetExecuted(targetInvocation)) {
+				return myExecutedTargets.get(targetInvocation);
 			}
 
-			Log.info("== Loading target: %s", targetName);
-			target = myReinforce.getTarget(targetName);
+			Log.info("== Loading target: %s", targetInvocation);
+			target = myReinforce.getTarget(targetInvocation);
 
-			Log.info("== Processing dependencies of target: %s", targetName);
-			dependencyTargetByName = new HashMap<>();
-			for (String depName : target.getDependencyTargetNames()) {
-				Target depTarget = runRecursively(depName);
-				dependencyTargetByName.put(depName, depTarget);
+			Log.info("== Processing dependencies of target: %s", targetInvocation);
+			for (TargetInvocation depInvocation : target.getDependencyTargets()) {
+				runRecursively(depInvocation);
 			}
 		} catch (FallbackTargetConstructionException e) {
-			String fallbackTargetName = e.getFallbackTargetName();
-			Log.info("== Could not construct target %s; falling back on %s", targetName, fallbackTargetName);
-			Target fallbackTarget = runRecursively(fallbackTargetName);
-			myExecutedTargets.put(targetName, fallbackTarget);
+			TargetInvocation fallbackTargetInvocation = e.getFallbackTarget();
+			Log.info("== Could not construct target %s; falling back on %s", targetInvocation, fallbackTargetInvocation);
+			Target fallbackTarget = runRecursively(fallbackTargetInvocation);
+			myExecutedTargets.put(targetInvocation, fallbackTarget);
 			return fallbackTarget;
 		} finally {
-			myRequestedTargets.remove(targetName);
+			myRequestedTargets.remove(targetInvocation);
 		}
 
-		execute(target, dependencyTargetByName);
-		myExecutedTargets.put(targetName, target);
+		execute(target);
+		myExecutedTargets.put(targetInvocation, target);
 
 		return target;
 	}
 
-	private void execute(Target target, Map<String, Target> dependencyTargetByName) throws BuildException {
+	private void execute(Target target) throws BuildException {
 		Build previousBuild = ourContextBuild.get();
 		ourContextBuild.set(this);
 		Target previousTarget = myCurrentTarget;
 		myCurrentTarget = target;
 		try {
-			Log.info("== Initializing target: %s", target.getName());
-			target.init(dependencyTargetByName);
-			Log.info("== Executing target: %s", target.getName());
+			Log.info("== Initializing target: %s", target.getInvocation());
+			target.init();
+			Log.info("== Executing target: %s", target.getInvocation());
 			target.run();
-			myExecutedTargets.put(target.getName(), target);
-			Log.info("== Executed target: %s", target.getName());
+			Log.info("== Executed target: %s", target.getInvocation());
 		} finally {
 			myCurrentTarget = previousTarget;
 			ourContextBuild.set(previousBuild);
 		}
 	}
 
-	public boolean isTargetExecuted(String targetName) {
-		return myExecutedTargets.containsKey(targetName);
+	public boolean isTargetExecuted(TargetInvocation invocation) {
+		return myExecutedTargets.containsKey(invocation);
 	}
 
 	/**
-	 * Get the object for a target with the specified name that was executed in this build.
+	 * Get the object for a target with the specified invocation that was executed in this build.
 	 *
-	 * @param targetName    the name of the target.
+	 * @param invocation    the invocation of the target.
 	 * @return the Target object, or {@code null} if this target has not been executed in this build.
 	 */
-	public Target getExecutedTarget(String targetName) {
-		return myExecutedTargets.get(targetName);
+	public Target getExecutedTarget(TargetInvocation invocation) {
+		return myExecutedTargets.get(invocation);
 	}
 
 	/**
@@ -160,19 +167,19 @@ public class Build {
 	 *
 	 * @return the set of executed target names.
 	 */
-	public Set<String> getExecutedTargetNames() {
+	public Set<TargetInvocation> getExecutedTargets() {
 		return new HashSet<>(myExecutedTargets.keySet());
 	}
 
-	public void setExecutedTarget(String name, Target target) throws ExecutionException {
-		if (name == null) {
+	public void setExecutedTarget(TargetInvocation invocation, Target target) throws ExecutionException {
+		if (invocation == null) {
 			throw new ExecutionException("target name must be non-null");
 		}
 		if (target == null) {
 			throw new ExecutionException("target object must be non-null");
 		}
-		Log.debug("Set executed target: '%s' -> %s", name, target);
-		myExecutedTargets.put(name, target);
+		Log.debug("Set executed target: %s -> %s", invocation, target);
+		myExecutedTargets.put(invocation, target);
 	}
 
 }

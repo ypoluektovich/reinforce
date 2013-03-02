@@ -1,0 +1,2 @@
+type: source
+location: src/${module.name}/resources

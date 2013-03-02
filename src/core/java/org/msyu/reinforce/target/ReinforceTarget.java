@@ -7,6 +7,7 @@ import org.msyu.reinforce.Reinforce;
 import org.msyu.reinforce.ReinterpretationException;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
+import org.msyu.reinforce.TargetInvocation;
 import org.msyu.reinforce.util.variables.VariableSubstitutionException;
 import org.msyu.reinforce.util.variables.Variables;
 
@@ -36,7 +37,7 @@ public class ReinforceTarget extends Target {
 
 	public static final String INHERIT_TARGETS_KEY = "inherit targets";
 
-	public static final Pattern RESULT_OF_TARGET_PATTERN = Pattern.compile("result of (.++)");
+	public static final Pattern RESULT_OF_TARGET_PATTERN = Pattern.compile("^result of (.++)$");
 
 	private Path myTargetDefLocation;
 
@@ -46,18 +47,18 @@ public class ReinforceTarget extends Target {
 
 	private Map<String, String> myVariables;
 
-	private Map<String, Target> myInheritedTargets;
+	private Map<TargetInvocation, Target> myInheritedTargets;
 
-	private final LinkedHashSet<String> myTargets = new LinkedHashSet<>();
+	private final LinkedHashSet<TargetInvocation> myTargets = new LinkedHashSet<>();
 
 	private Build myBuild;
 
-	public ReinforceTarget(String name) {
-		super(name);
+	public ReinforceTarget(TargetInvocation invocation) {
+		super(invocation);
 	}
 
 	@Override
-	protected void initTarget(Map docMap, Map<String, Target> dependencyTargetByName) throws TargetInitializationException {
+	protected void initTarget(Map docMap) throws TargetInitializationException {
 		if (docMap.containsKey(TARGET_DEFS_KEY)) {
 			myTargetDefLocation = getStringAsPath(docMap, TARGET_DEFS_KEY);
 		}
@@ -76,23 +77,9 @@ public class ReinforceTarget extends Target {
 
 		initVariables(docMap);
 
-		initInheritedTargets(docMap, dependencyTargetByName);
+		initInheritedTargets(docMap);
 
-		myTargets.clear();
-		Object targets = docMap.get(TARGETS_KEY);
-		if (targets instanceof String) {
-			myTargets.add((String) targets);
-		} else if (targets instanceof List) {
-			List targetList = (List) targets;
-			for (int i = 0; i < targetList.size(); i++) {
-				Object target = targetList.get(i);
-				if (target instanceof String) {
-					myTargets.add((String) target);
-				} else {
-					throw new TargetInitializationException("invalid target name on position " + i + ": must be a string");
-				}
-			}
-		}
+		initTargetsToExecute(docMap);
 	}
 
 	private Path getStringAsPath(Map docMap, String key) throws TargetInitializationException {
@@ -141,7 +128,7 @@ public class ReinforceTarget extends Target {
 
 
 	@SuppressWarnings("unchecked")
-	private void initInheritedTargets(Map docMap, Map<String, Target> dependencyTargetByName) throws TargetInitializationException {
+	private void initInheritedTargets(Map docMap) throws TargetInitializationException {
 		if (!docMap.containsKey(INHERIT_TARGETS_KEY)) {
 			return;
 		}
@@ -149,29 +136,59 @@ public class ReinforceTarget extends Target {
 		Object inheritedTargetList = docMap.get(INHERIT_TARGETS_KEY);
 		if (inheritedTargetList instanceof List) {
 			for (Object inheritedTargetName : new HashSet((List) inheritedTargetList)) {
-				addInheritedTarget(inheritedTargetName, dependencyTargetByName);
+				addInheritedTarget(inheritedTargetName);
 			}
 		} else {
-			addInheritedTarget(inheritedTargetList, dependencyTargetByName);
+			addInheritedTarget(inheritedTargetList);
 		}
 	}
 
-	private void addInheritedTarget(Object inheritedTargetDef, Map<String, Target> dependencyTargetByName) throws TargetInitializationException {
+	private void addInheritedTarget(Object inheritedTargetDef) throws TargetInitializationException {
 		if (!(inheritedTargetDef instanceof String)) {
 			throw new TargetInitializationException(
 					"value of '" + INHERIT_TARGETS_KEY + "' setting must be a string or a list of strings");
 		}
-		if (!dependencyTargetByName.containsKey(inheritedTargetDef)) {
-			throw new TargetInitializationException(
-					"target with name '" + inheritedTargetDef + "' is not available as a dependency for inheritance");
-		}
-		String inheritedTargetName = null;
+		String expandedTargetDef;
 		try {
-			inheritedTargetName = Variables.expand((String) inheritedTargetDef);
+			expandedTargetDef = Variables.expand((String) inheritedTargetDef);
 		} catch (VariableSubstitutionException e) {
-			throw new TargetInitializationException("error while expanding inherited target name", e);
+			throw new TargetInitializationException("error while expanding variables in inherited target spec", e);
 		}
-		myInheritedTargets.put(inheritedTargetName, dependencyTargetByName.get(inheritedTargetName));
+		TargetInvocation invocation = TargetInvocation.parse(expandedTargetDef);
+		if (!Build.getCurrent().isTargetExecuted(invocation)) {
+			throw new TargetInitializationException("target '" + expandedTargetDef + "' is not available for inheritance");
+		}
+		myInheritedTargets.put(invocation, Build.getCurrent().getExecutedTarget(invocation));
+	}
+
+	private void initTargetsToExecute(Map docMap) throws TargetInitializationException {
+		myTargets.clear();
+		Object targets = docMap.get(TARGETS_KEY);
+		if (targets instanceof List) {
+			List targetList = (List) targets;
+			for (int i = 0; i < targetList.size(); i++) {
+				addTargetToExecute(targetList.get(i), i);
+			}
+		} else {
+			addTargetToExecute(targets, 0);
+		}
+	}
+
+	private void addTargetToExecute(Object targetSpec, int index) throws TargetInitializationException {
+		if (!(targetSpec instanceof String)) {
+			throw new TargetInitializationException("invalid target invocation spec in position " + index + ": must be a string");
+		}
+		String expandedTargetSpec;
+		try {
+			expandedTargetSpec = Variables.expand((String) targetSpec);
+		} catch (VariableSubstitutionException e) {
+			throw new TargetInitializationException("error while expanding variables in target invocation spec in position " + index);
+		}
+		TargetInvocation invocation = TargetInvocation.parse(expandedTargetSpec);
+		if (invocation == null) {
+			throw new TargetInitializationException("invalid target invocation spec in position " + index + ": invalid format");
+		}
+		myTargets.add(invocation);
 	}
 
 
@@ -203,7 +220,7 @@ public class ReinforceTarget extends Target {
 		Matcher matcher = RESULT_OF_TARGET_PATTERN.matcher(interpretationSpec);
 		if (matcher.matches()) {
 			String targetName = matcher.group(1);
-			Target target = myBuild.getExecutedTarget(targetName);
+			Target target = myBuild.getExecutedTarget(TargetInvocation.parse(targetName));
 			if (target != null) {
 				return target;
 			}

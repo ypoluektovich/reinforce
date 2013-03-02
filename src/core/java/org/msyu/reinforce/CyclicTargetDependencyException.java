@@ -2,15 +2,15 @@ package org.msyu.reinforce;
 
 public class CyclicTargetDependencyException extends TargetLoadingException {
 
-	private final String targetName;
+	private final TargetInvocation myTargetInvocation;
 
-	public CyclicTargetDependencyException(String targetName) {
-		this.targetName = targetName;
+	public CyclicTargetDependencyException(TargetInvocation invocation) {
+		this.myTargetInvocation = invocation;
 	}
 
 	@Override
 	public String getMessage() {
-		return String.format("Detected a dependency cycle starting with the target %s", targetName);
+		return String.format("Detected a dependency cycle starting with the target %s", myTargetInvocation);
 	}
 
 }

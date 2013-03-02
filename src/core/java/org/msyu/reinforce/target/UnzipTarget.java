@@ -4,6 +4,7 @@ import org.msyu.reinforce.Build;
 import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
+import org.msyu.reinforce.TargetInvocation;
 import org.msyu.reinforce.resources.FileCollections;
 import org.msyu.reinforce.resources.FilterFromMap;
 import org.msyu.reinforce.resources.IncludeExcludeResourceFilter;
@@ -42,12 +43,12 @@ public class UnzipTarget extends Target implements ResourceCollection {
 
 	private ResourceCollection myUnpackedFiles;
 
-	public UnzipTarget(String name) {
-		super(name);
+	public UnzipTarget(TargetInvocation invocation) {
+		super(invocation);
 	}
 
 	@Override
-	protected void initTarget(Map docMap, Map<String, Target> dependencyTargetByName) throws TargetInitializationException {
+	protected void initTarget(Map docMap) throws TargetInitializationException {
 		initializeSources(docMap);
 		initializeDestination(docMap);
 		myFilter = FilterFromMap.interpretIncludeExclude(docMap);
@@ -76,7 +77,7 @@ public class UnzipTarget extends Target implements ResourceCollection {
 	@Override
 	public void run() throws ExecutionException {
 		Path destinationPath = myDestinationPath == null ?
-				Build.getCurrent().getSandboxPath().resolve(getName()) :
+				Build.getCurrent().getSandboxPath().resolve(getInvocation().getTargetName()) :
 				Build.getCurrent().getBasePath().resolve(myDestinationPath);
 		try {
 			FilesUtil.deleteFileTree(destinationPath);

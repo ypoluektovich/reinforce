@@ -1,6 +1,7 @@
 package org.msyu.reinforce.target.archive;
 
 import org.msyu.reinforce.ExecutionException;
+import org.msyu.reinforce.TargetInvocation;
 import org.msyu.reinforce.resources.Resource;
 
 import java.io.IOException;
@@ -8,8 +9,8 @@ import java.nio.file.Path;
 
 public class ZipTarget extends AbstractArchiveTarget<ZipOutputStreamWrapper> {
 
-	public ZipTarget(String name) {
-		super(name);
+	public ZipTarget(TargetInvocation invocation) {
+		super(invocation);
 	}
 
 	@Override

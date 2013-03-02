@@ -2,6 +2,7 @@ package org.msyu.reinforce.target;
 
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetFactory;
+import org.msyu.reinforce.TargetInvocation;
 import org.msyu.reinforce.target.archive.JarTarget;
 import org.msyu.reinforce.target.archive.ZipTarget;
 import org.msyu.reinforce.target.javac.JavacTarget;
@@ -19,25 +20,25 @@ public class CoreTargetFactory implements TargetFactory {
 	public static final String REIN = "rein";
 
 	@Override
-	public Target createTargetObject(String type, String name) {
+	public Target createTargetObject(String type, TargetInvocation targetInvocation) {
 		switch (type) {
 			case ECHO:
-				return new EchoTarget(name);
+				return new EchoTarget(targetInvocation);
 			case SOURCE:
-				return new SourceTarget(name);
+				return new SourceTarget(targetInvocation);
 			case JAVAC:
-				return new JavacTarget(name);
+				return new JavacTarget(targetInvocation);
 			case ZIP:
-				return new ZipTarget(name);
+				return new ZipTarget(targetInvocation);
 			case JAR:
-				return new JarTarget(name);
+				return new JarTarget(targetInvocation);
 			case UNZIP:
-				return new UnzipTarget(name);
+				return new UnzipTarget(targetInvocation);
 			case EXEC:
-				return new ExecTarget(name);
+				return new ExecTarget(targetInvocation);
 			case REINFORCE:
 			case REIN:
-				return new ReinforceTarget(name);
+				return new ReinforceTarget(targetInvocation);
 			default:
 				return null;
 		}

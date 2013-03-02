@@ -1,5 +1,8 @@
 package org.msyu.reinforce;
 
+import org.msyu.reinforce.util.variables.VariableSource;
+import org.msyu.reinforce.util.variables.VariableSubstitutionException;
+import org.msyu.reinforce.util.variables.Variables;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
 import org.yaml.snakeyaml.error.YAMLException;
@@ -12,15 +15,14 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 public class YamlTargetLoader implements TargetRepository {
-
-	public static final Pattern NAME_PATTERN = Pattern.compile("[-\\w]+");
 
 	public static final String TARGET_DEPENDENCY_KEY = "depends on";
 
 	public static final String FALLBACK_KEY = "fallback";
+
+	private static final ThreadLocal<VariableSource> ourVariableSource = new ThreadLocal<>();
 
 	private final Map<String, Map> myTargetDefinitions = new HashMap<>();
 
@@ -31,8 +33,18 @@ public class YamlTargetLoader implements TargetRepository {
 	}
 
 	@Override
-	public Target getTarget(String name) throws TargetDefinitionLoadingException, TargetConstructionException {
-		return constructTarget(name, getTargetDefinition(name));
+	public Target getTarget(TargetInvocation invocation) throws TargetDefinitionLoadingException, TargetConstructionException {
+		VariableSource oldVariableSource = ourVariableSource.get();
+		Build currentBuild = Build.getCurrent();
+		ourVariableSource.set(Variables.sourceFromChain(
+				Variables.sourceFromMap(invocation.getParameters()),
+				(currentBuild == null) ? null : currentBuild.getBuildVariables()
+		));
+		try {
+			return constructTarget(invocation, getTargetDefinition(invocation.getTargetName()));
+		} finally {
+			ourVariableSource.set(oldVariableSource);
+		}
 	}
 
 	private Map getTargetDefinition(String targetName) throws TargetDefinitionLoadingException {
@@ -43,19 +55,12 @@ public class YamlTargetLoader implements TargetRepository {
 	}
 
 	private Map loadDefinition(String targetName) throws TargetDefinitionLoadingException {
-		checkName(targetName);
 		Log.verbose("Loading target from YAML definition");
 		Object document = loadYamlDocument(targetName);
 		if (!(document instanceof Map)) {
 			throw new TargetDefinitionLoadingException("target definition document must be a map");
 		}
 		return (Map) document;
-	}
-
-	private static void checkName(String name) throws InvalidTargetNameException {
-		if (name == null || !NAME_PATTERN.matcher(name).matches()) {
-			throw new InvalidTargetNameException(name);
-		}
 	}
 
 	private Object loadYamlDocument(String targetName) throws TargetDefinitionLoadingException {
@@ -73,72 +78,92 @@ public class YamlTargetLoader implements TargetRepository {
 		}
 	}
 
-	private Target constructTarget(String targetName, Map docMap) throws TargetConstructionException {
+	private Target constructTarget(TargetInvocation invocation, Map docMap) throws TargetConstructionException {
 		Log.debug("Starting target object construction");
-		String fallbackTargetName = getFallbackTargetName(docMap);
+		TargetInvocation fallbackTargetInvocation = null;
 		try {
-			Target target = createTargetObject(docMap, targetName);
+			fallbackTargetInvocation = getFallbackTargetInvocation(docMap);
+			Target target = createTargetObject(docMap, invocation);
 			target.setDefinitionDocument(docMap);
-			target.setDependencyTargetNames(
+			target.setDependencyTargets(
 					docMap.containsKey(TARGET_DEPENDENCY_KEY) ?
 							parseTargetDependencies(docMap.get(TARGET_DEPENDENCY_KEY)) :
-							Collections.<String>emptySet()
+							Collections.<TargetInvocation>emptySet()
 			);
 			Log.debug("Target object ready for initialization");
 			return target;
 		} catch (TargetConstructionException e) {
-			e.setTargetName(targetName);
-			if (fallbackTargetName != null) {
-				throw new FallbackTargetConstructionException(fallbackTargetName, e);
+			e.setInvocation(invocation);
+			if (fallbackTargetInvocation != null) {
+				throw new FallbackTargetConstructionException(fallbackTargetInvocation, e);
 			} else {
 				throw e;
 			}
 		}
 	}
 
-	private String getFallbackTargetName(Map docMap) throws TargetConstructionException {
+	private TargetInvocation getFallbackTargetInvocation(Map docMap) throws TargetConstructionException {
 		if (!docMap.containsKey(FALLBACK_KEY)) {
 			Log.debug("No fallback target specified");
 			return null;
 		}
-
-		Object fallbackTargetName = docMap.get(FALLBACK_KEY);
-		if (!(fallbackTargetName instanceof String)) {
+		Object fallbackTargetSetting = docMap.get(FALLBACK_KEY);
+		if (!(fallbackTargetSetting instanceof String)) {
 			throw new TargetConstructionException("fallback setting must be a string");
 		}
-		return (String) fallbackTargetName;
+		String fallbackTargetSpec;
+		try {
+			fallbackTargetSpec = Variables.expand((String) fallbackTargetSetting, ourVariableSource.get());
+		} catch (VariableSubstitutionException e) {
+			throw new TargetConstructionException("error while expanding variables in fallback setting", e);
+		}
+		TargetInvocation invocation = TargetInvocation.parse(fallbackTargetSpec);
+		if (invocation == null) {
+			throw new TargetConstructionException("fallback setting must be a correct target invocation");
+		}
+		return invocation;
 	}
 
-	private Target createTargetObject(Map docMap, String targetName) throws TargetConstructionException {
+	private Target createTargetObject(Map docMap, TargetInvocation invocation) throws TargetConstructionException {
 		Object typeObject = docMap.get("type");
 		if (!(typeObject instanceof String)) {
 			throw new TargetConstructionException("target must declare its type as a string");
 		}
-		return TargetFactories.createTargetObject((String) typeObject, targetName);
+		return TargetFactories.createTargetObject((String) typeObject, invocation);
 	}
 
-	private Set<String> parseTargetDependencies(Object depList) throws InvalidTargetDependencyException {
+	private Set<TargetInvocation> parseTargetDependencies(Object depList) throws InvalidTargetDependencyException {
 		if (depList == null) {
 			return Collections.emptySet();
 		}
 		Log.verbose("Parsing list of dependency targets");
-		Set<String> dependencyNames = new LinkedHashSet<>();
-
-		if (depList instanceof String) {
-			dependencyNames.add((String) depList);
-		} else if (depList instanceof List) {
+		Set<TargetInvocation> invocations = new LinkedHashSet<>();
+		if (depList instanceof List) {
 			for (Object dependencyObject : (List) depList) {
-				if (!(dependencyObject instanceof String)) {
-					throw new InvalidTargetDependencyException("dependencies must be referenced by their string names");
-				}
-				dependencyNames.add((String) dependencyObject);
+				invocations.add(expandAndParseInvocation(dependencyObject));
 			}
 		} else {
-			throw new InvalidTargetDependencyException("dependency list is invalid");
+			invocations.add(expandAndParseInvocation(depList));
 		}
-
 		Log.verbose("Finished parsing dependencies");
-		return dependencyNames;
+		return invocations;
+	}
+
+	private TargetInvocation expandAndParseInvocation(Object dependencyObject) throws InvalidTargetDependencyException {
+		if (!(dependencyObject instanceof String)) {
+			throw new InvalidTargetDependencyException("dependencies must be listed as strings");
+		}
+		String expandedDependency = null;
+		try {
+			expandedDependency = Variables.expand((String) dependencyObject, ourVariableSource.get());
+		} catch (VariableSubstitutionException e) {
+			throw new InvalidTargetDependencyException("error while expanding variables in dependency spec", e);
+		}
+		TargetInvocation invocation = TargetInvocation.parse(expandedDependency);
+		if (invocation == null) {
+			throw new InvalidTargetDependencyException("not a target: " + dependencyObject);
+		}
+		return invocation;
 	}
 
 }

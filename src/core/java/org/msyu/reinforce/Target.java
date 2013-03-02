@@ -7,18 +7,18 @@ import java.util.Set;
 
 public abstract class Target implements Reinterpretable {
 
-	private final String name;
+	private final TargetInvocation myInvocation;
 
-	private final Set<String> dependencyTargetNames = new LinkedHashSet<>();
+	private Set<TargetInvocation> myDependencyTargets;
 
 	private Map myDefinitionDocument;
 
-	public Target(String name) {
-		this.name = name;
+	public Target(TargetInvocation invocation) {
+		this.myInvocation = invocation;
 	}
 
-	void setDependencyTargetNames(Set<String> names) {
-		dependencyTargetNames.addAll(names);
+	void setDependencyTargets(Set<TargetInvocation> invocations) {
+		myDependencyTargets = new LinkedHashSet<>(invocations);
 	}
 
 	void setDefinitionDocument(Map docMap) {
@@ -26,24 +26,24 @@ public abstract class Target implements Reinterpretable {
 	}
 
 
-	public final String getName() {
-		return name;
+	public final TargetInvocation getInvocation() {
+		return myInvocation;
 	}
 
-	public Set<String> getDependencyTargetNames() {
-		return Collections.unmodifiableSet(dependencyTargetNames);
+	public Set<TargetInvocation> getDependencyTargets() {
+		return Collections.unmodifiableSet(myDependencyTargets);
 	}
 
 
-	void init(Map<String, Target> dependencyTargetByName) throws TargetInitializationException {
+	void init() throws TargetInitializationException {
 		if (myDefinitionDocument == null) {
 			return;
 		}
-		initTarget(myDefinitionDocument, dependencyTargetByName);
+		initTarget(myDefinitionDocument);
 		myDefinitionDocument = null;
 	}
 
-	protected abstract void initTarget(Map docMap, Map<String, Target> dependencyTargetByName)
+	protected abstract void initTarget(Map docMap)
 			throws TargetInitializationException;
 
 

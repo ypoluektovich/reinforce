@@ -1,9 +1,0 @@
-depends on: [ compile-core , compile-ivy , explode-libs ]
-type: jar
-source:
- - compile-core
- - compile-ivy
- - explode-libs
- - src/core/resources
- - src/ivy/resources
-destination: build/reinforce.jar

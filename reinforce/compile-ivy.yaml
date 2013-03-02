@@ -1,7 +1,0 @@
-depends on: compile-core
-type: javac
-compiler: external
-source: src/ivy/java
-classpath:
- - { target: compile-core, as: root }
- - { location: lib, include: ivy }

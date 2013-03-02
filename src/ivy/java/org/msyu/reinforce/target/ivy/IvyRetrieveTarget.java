@@ -11,6 +11,7 @@ import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.Log;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
+import org.msyu.reinforce.TargetInvocation;
 import org.msyu.reinforce.resources.FileSystemResource;
 import org.msyu.reinforce.resources.Resource;
 import org.msyu.reinforce.resources.ResourceCollection;
@@ -52,12 +53,12 @@ public class IvyRetrieveTarget extends Target implements ResourceCollection {
 
 	private ResourceCollection myRetrievedFiles;
 
-	public IvyRetrieveTarget(String name) {
-		super(name);
+	public IvyRetrieveTarget(TargetInvocation invocation) {
+		super(invocation);
 	}
 
 	@Override
-	protected void initTarget(Map docMap, Map<String, Target> dependencyTargetByName) throws TargetInitializationException {
+	protected void initTarget(Map docMap) throws TargetInitializationException {
 		if (docMap.containsKey(IVY_LOGGING_KEY)) {
 			Object ivyLoggingSetting = docMap.get(IVY_LOGGING_KEY);
 			if (!(ivyLoggingSetting instanceof String)) {
@@ -125,24 +126,34 @@ public class IvyRetrieveTarget extends Target implements ResourceCollection {
 			// the default value mimics the behaviour of standalone mode of Ivy 2.2.0
 			mySaveTo = "lib/[conf]/[artifact].[ext]";
 		}
-		if (docMap.containsKey(CONFS_KEY)) {
-			Object confsObject = docMap.get(CONFS_KEY);
-			if (confsObject instanceof String) {
-				myConfs = new String[]{(String) confsObject};
-			} else if (confsObject instanceof List) {
-				List confsList = (List) confsObject;
-				List<String> confNames = new ArrayList<>(confsList.size());
-				for (Object confName : confsList) {
-					if (confName instanceof String) {
-						confNames.add((String) confName);
-					} else {
-						throw new TargetInitializationException("all conf names must be strings");
-					}
-				}
-				myConfs = confNames.toArray(new String[confNames.size()]);
-			} else {
-				throw new TargetInitializationException("value of '" + CONFS_KEY + "' must be a string or a list of strings");
+		initConfs(docMap);
+	}
+
+	private void initConfs(Map docMap) throws TargetInitializationException {
+		if (!docMap.containsKey(CONFS_KEY)) {
+			return;
+		}
+		Object confsObject = docMap.get(CONFS_KEY);
+		if (confsObject instanceof List) {
+			List confsList = (List) confsObject;
+			List<String> confNames = new ArrayList<>(confsList.size());
+			for (int i = 0; i < confsList.size(); i++) {
+				confNames.add(expandConf(confsList.get(i), i));
 			}
+			myConfs = confNames.toArray(new String[confNames.size()]);
+		} else {
+			myConfs = new String[]{expandConf(confsObject, 0)};
+		}
+	}
+
+	private String expandConf(Object confSetting, int index) throws TargetInitializationException {
+		if (!(confSetting instanceof String)) {
+			throw new TargetInitializationException("invalid setting under '" + CONFS_KEY + "' at #" + index + ": must be a string");
+		}
+		try {
+			return Variables.expand((String) confSetting);
+		} catch (VariableSubstitutionException e) {
+			throw new TargetInitializationException("error while expanding variables in element " + index + " of '" + CONFS_KEY + "'", e);
 		}
 	}
 

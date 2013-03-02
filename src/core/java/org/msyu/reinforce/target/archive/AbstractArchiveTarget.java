@@ -5,6 +5,7 @@ import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.Log;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
+import org.msyu.reinforce.TargetInvocation;
 import org.msyu.reinforce.resources.ResourceCollections;
 import org.msyu.reinforce.resources.Resource;
 import org.msyu.reinforce.resources.ResourceAccessException;
@@ -13,6 +14,8 @@ import org.msyu.reinforce.resources.ResourceEnumerationException;
 import org.msyu.reinforce.resources.ResourceIterator;
 import org.msyu.reinforce.resources.SingleResourceIterator;
 import org.msyu.reinforce.util.FilesUtil;
+import org.msyu.reinforce.util.variables.VariableSubstitutionException;
+import org.msyu.reinforce.util.variables.Variables;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -35,13 +38,13 @@ public abstract class AbstractArchiveTarget<T extends Closeable> extends Target 
 	private Path myDestinationPath;
 
 
-	protected AbstractArchiveTarget(String name) {
-		super(name);
+	protected AbstractArchiveTarget(TargetInvocation invocation) {
+		super(invocation);
 	}
 
 
 	@Override
-	protected final void initTarget(Map docMap, Map<String, Target> dependencyTargetByName) throws TargetInitializationException {
+	protected final void initTarget(Map docMap) throws TargetInitializationException {
 		initializeSources(docMap);
 		initializeDestination(docMap);
 		customInitTarget();
@@ -60,11 +63,16 @@ public abstract class AbstractArchiveTarget<T extends Closeable> extends Target 
 			return;
 		}
 		Object destinationObject = docMap.get(DESTINATION_KEY);
-		if (destinationObject instanceof String) {
-			myDestinationPath = Paths.get((String) destinationObject);
-			return;
+		if (!(destinationObject instanceof String)) {
+			throw new TargetInitializationException("invalid destination: must be a string");
 		}
-		throw new TargetInitializationException("invalid destination: must be a string");
+		String expandedDestination = null;
+		try {
+			expandedDestination = Variables.expand((String) destinationObject);
+		} catch (VariableSubstitutionException e) {
+			throw new TargetInitializationException("error while expanding variables in '" + DESTINATION_KEY + "' setting", e);
+		}
+		myDestinationPath = Paths.get(expandedDestination);
 	}
 
 	protected void customInitTarget() {
@@ -75,7 +83,7 @@ public abstract class AbstractArchiveTarget<T extends Closeable> extends Target 
 	@Override
 	public void run() throws ExecutionException {
 		Path destinationPath = myDestinationPath == null ?
-				Build.getCurrent().getSandboxPath().resolve(getName() + ".zip") :
+				Build.getCurrent().getSandboxPath().resolve(getInvocation() + ".zip") :
 				Build.getCurrent().getBasePath().resolve(myDestinationPath);
 		try {
 			Log.verbose("Clearing the destination path");

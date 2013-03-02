@@ -1,0 +1,9 @@
+depends on: libs@default
+type: javac
+source: src/${module.name}/java
+classpath:
+ - libs@default
+ - target: ^build_
+   match: regex
+   as: [ result of compile , root ]
+   allow empty: yes

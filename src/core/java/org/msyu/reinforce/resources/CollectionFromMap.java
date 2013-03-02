@@ -3,7 +3,10 @@ package org.msyu.reinforce.resources;
 import org.msyu.reinforce.Build;
 import org.msyu.reinforce.Log;
 import org.msyu.reinforce.ReinterpretationException;
+import org.msyu.reinforce.TargetInvocation;
 import org.msyu.reinforce.util.ReinterpretableUtil;
+import org.msyu.reinforce.util.variables.VariableSubstitutionException;
+import org.msyu.reinforce.util.variables.Variables;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -98,12 +101,12 @@ public class CollectionFromMap {
 
 		List<Object> matchedTargets = new ArrayList<>();
 		Log.debug("Matching target names with %s", matcher);
-		for (String targetName : Build.getCurrent().getExecutedTargetNames()) {
-			if (matcher.fits(targetName)) {
-				Log.debug("%s fits", targetName);
-				matchedTargets.add(Build.getCurrent().getExecutedTarget(targetName));
+		for (TargetInvocation executedInvocation : Build.getCurrent().getExecutedTargets()) {
+			if (matcher.fits(executedInvocation.getTargetName())) {
+				Log.debug("%s fits", executedInvocation);
+				matchedTargets.add(Build.getCurrent().getExecutedTarget(executedInvocation));
 			} else {
-				Log.debug("%s does not fit", targetName);
+				Log.debug("%s does not fit", executedInvocation);
 			}
 		}
 		return matchedTargets;
@@ -154,13 +157,19 @@ public class CollectionFromMap {
 		}
 	}
 
-	private static List<Object> matchLocations(Object locationObject, Map defMap) throws ResourceConstructionException {
+	private static List<Object> matchLocations(Object locationSetting, Map defMap) throws ResourceConstructionException {
 		Log.debug("Interpreting location as base collection...");
-		if (!(locationObject instanceof String)) {
+		if (!(locationSetting instanceof String)) {
 			throw new ResourceConstructionException("location must be a string (a path in file system)");
 		}
+		String locationString;
+		try {
+			locationString = Variables.expand((String) locationSetting);
+		} catch (VariableSubstitutionException e) {
+			throw new ResourceConstructionException("error while expanding variables in location setting", e);
+		}
 		List<Object> matchedItems = new ArrayList<>();
-		ResourceCollection collection = CollectionFromString.interpretLocation((String) locationObject);
+		ResourceCollection collection = CollectionFromString.interpretLocation(locationString);
 		try {
 			if (!collection.isEmpty()) {
 				matchedItems.add(collection);

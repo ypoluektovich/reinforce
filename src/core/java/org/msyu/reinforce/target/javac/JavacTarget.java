@@ -5,6 +5,7 @@ import org.msyu.reinforce.Log;
 import org.msyu.reinforce.ReinterpretationException;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
+import org.msyu.reinforce.TargetInvocation;
 import org.msyu.reinforce.resources.FileCollections;
 import org.msyu.reinforce.resources.Resource;
 import org.msyu.reinforce.resources.ResourceAccessException;
@@ -38,12 +39,12 @@ public class JavacTarget extends Target implements ResourceCollection {
 
 	private ResourceCollection myClassFiles;
 
-	public JavacTarget(String name) {
-		super(name);
+	public JavacTarget(TargetInvocation invocation) {
+		super(invocation);
 	}
 
 	@Override
-	protected void initTarget(Map docMap, Map<String, Target> dependencyTargetByName)
+	protected void initTarget(Map docMap)
 			throws TargetInitializationException
 	{
 		myJavaCompiler = prepareCompiler(docMap);
@@ -86,7 +87,7 @@ public class JavacTarget extends Target implements ResourceCollection {
 
 	@Override
 	public void run() throws ExecutionException {
-		Path destinationPath = myJavaCompiler.execute(getName(), mySources, myClasspath);
+		Path destinationPath = myJavaCompiler.execute(getInvocation().getTargetName(), mySources, myClasspath);
 
 		myClassFiles = FileCollections.fromPath(destinationPath);
 		try {

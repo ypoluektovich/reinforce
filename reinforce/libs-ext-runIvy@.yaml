@@ -1,0 +1,5 @@
+type: exec
+command:
+ - ./retrieve-libs.sh
+ - ${module.name}
+ - ${}

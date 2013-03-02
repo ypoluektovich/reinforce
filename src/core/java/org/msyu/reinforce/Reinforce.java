@@ -45,8 +45,8 @@ public class Reinforce {
 			Path basePath,
 			Path sandboxPath,
 			Map<String, String> variables,
-			Map<String, Target> inheritedTargets,
-			Iterable<String> targetNames
+			Map<TargetInvocation, Target> inheritedTargets,
+			Iterable<TargetInvocation> targetInvocations
 	) throws BuildException {
 		Build build = new Build(this, basePath.toAbsolutePath().normalize(), sandboxPath);
 		if (variables != null) {
@@ -55,16 +55,16 @@ public class Reinforce {
 			}
 		}
 		if (inheritedTargets != null) {
-			for (Map.Entry<String, Target> inheritedTarget : inheritedTargets.entrySet()) {
+			for (Map.Entry<TargetInvocation, Target> inheritedTarget : inheritedTargets.entrySet()) {
 				build.setExecutedTarget(inheritedTarget.getKey(), inheritedTarget.getValue());
 			}
 		}
-		build.executeOnce(targetNames);
+		build.executeOnce(targetInvocations);
 		return build;
 	}
 
-	Target getTarget(String name) throws TargetLoadingException {
-		return myTargetLoader.getTarget(name);
+	Target getTarget(TargetInvocation invocation) throws TargetLoadingException {
+		return myTargetLoader.getTarget(invocation);
 	}
 
 }

@@ -1,0 +1,15 @@
+depends on: [ compile, resources, explode-libs ]
+type: jar
+source:
+ - target: ^build_
+   match: regex
+   as: result of compile
+   allow empty: yes
+ - compile
+ - target: ^build_
+   match: regex
+   as: result of resources
+   allow empty: yes
+ - resources
+ - explode-libs
+destination: build/${module.name}/reinforce-bundle.jar

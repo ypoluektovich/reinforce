@@ -1,0 +1,5 @@
+fallback: libs-ext@${}
+type: ivy-retrieve
+ivy.xml: src/${module.name}/ivy.xml
+confs: ${}
+save to: lib/[artifact]-[revision].[ext]
