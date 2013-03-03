@@ -1,0 +1,6 @@
+depends on: [ compile, resources ]
+type: jar
+source:
+ - compile
+ - resources
+destination: build/${module.name}/reinforce-${module.name}.jar

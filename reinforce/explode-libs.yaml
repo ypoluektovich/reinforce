@@ -1,8 +1,0 @@
-depends on: libs@default
-type: unzip
-source: libs@default
-exclude:
- - META-INF
- - module.properties   # ivy
- - ^fr(?:$|/)          # ivy
- - LICENSE.txt         # junit, hamcrest

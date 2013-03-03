@@ -2,4 +2,4 @@ type: reinforce
 sandbox path: build/core
 variables:
   module.name: core
-targets: jar-bundle
+targets: jar

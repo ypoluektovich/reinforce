@@ -5,5 +5,5 @@ classpath:
  - libs@default
  - target: ^build_
    match: regex
-   as: [ result of compile , root ]
+   as: [ result of jar ]
    allow empty: yes

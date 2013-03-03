@@ -4,4 +4,4 @@ sandbox path: build/ivy
 variables:
   module.name: ivy
 inherit targets: build_core
-targets: jar-bundle
+targets: jar
