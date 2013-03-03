@@ -2,6 +2,7 @@ package org.msyu.reinforce.target.ivy;
 
 import org.apache.ivy.Ivy;
 import org.apache.ivy.core.report.ResolveReport;
+import org.apache.ivy.core.resolve.ResolveOptions;
 import org.apache.ivy.core.retrieve.RetrieveOptions;
 import org.apache.ivy.core.retrieve.RetrieveReport;
 import org.apache.ivy.util.DefaultMessageLogger;
@@ -144,6 +145,7 @@ public class IvyRetrieveTarget extends Target implements ResourceCollection {
 		} else {
 			myConfs = new String[]{expandConf(confsObject, 0)};
 		}
+		Log.verbose("Retrieving confs: %s", (Object) myConfs);
 	}
 
 	private String expandConf(Object confSetting, int index) throws TargetInitializationException {
@@ -172,7 +174,14 @@ public class IvyRetrieveTarget extends Target implements ResourceCollection {
 
 		ResolveReport resolveReport;
 		try {
-			resolveReport = ivy.resolve(Build.getCurrent().getBasePath().resolve(myIvyXmlPath).toFile());
+			ResolveOptions resolveOptions = new ResolveOptions();
+			if (myConfs != null) {
+				resolveOptions.setConfs(myConfs);
+			}
+			resolveReport = ivy.resolve(
+					Build.getCurrent().getBasePath().resolve(myIvyXmlPath).toFile().toURI().toURL(),
+					resolveOptions
+			);
 		} catch (Exception e) {
 			throw new ExecutionException("error while resolving ivy modules", e);
 		}
