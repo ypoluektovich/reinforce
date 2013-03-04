@@ -26,6 +26,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -145,7 +146,7 @@ public class IvyRetrieveTarget extends Target implements ResourceCollection {
 		} else {
 			myConfs = new String[]{expandConf(confsObject, 0)};
 		}
-		Log.verbose("Retrieving confs: %s", (Object) myConfs);
+		Log.verbose("Retrieving confs: %s", Arrays.asList(myConfs));
 	}
 
 	private String expandConf(Object confSetting, int index) throws TargetInitializationException {
