@@ -1,6 +1,9 @@
 package org.msyu.reinforce;
 
+import org.msyu.reinforce.target.special.SpecialTargetRepository;
+
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -16,14 +19,17 @@ public class Reinforce {
 
 	private final Path myTargetDefLocation;
 
-	private final YamlTargetLoader myTargetLoader;
+	private final TargetRepository myTargetRepository;
 
 	public Reinforce(Path targetDefLocation) {
 		myIndex = ourIndexSource.incrementAndGet();
 		Log.info("==== %s reporting!", this.toString());
 
 		myTargetDefLocation = targetDefLocation.normalize();
-		myTargetLoader = new YamlTargetLoader(new FileSystemTargetDefinitionStreamSource(myTargetDefLocation));
+		myTargetRepository = new ChainTargetRepository(Arrays.asList(
+				new SpecialTargetRepository(),
+				new YamlTargetLoader(new FileSystemTargetDefinitionStreamSource(myTargetDefLocation))
+		));
 		Log.verbose("Loading targets from %s", myTargetDefLocation);
 	}
 
@@ -63,8 +69,8 @@ public class Reinforce {
 		return build;
 	}
 
-	Target getTarget(TargetInvocation invocation) throws TargetLoadingException {
-		return myTargetLoader.getTarget(invocation);
+	Target getTarget(TargetInvocation invocation) throws TargetNotFoundException, TargetLoadingException {
+		return myTargetRepository.getTarget(invocation);
 	}
 
 }

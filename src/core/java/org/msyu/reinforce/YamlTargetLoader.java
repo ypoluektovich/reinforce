@@ -33,7 +33,7 @@ public class YamlTargetLoader implements TargetRepository {
 	}
 
 	@Override
-	public Target getTarget(TargetInvocation invocation) throws TargetDefinitionLoadingException, TargetConstructionException {
+	public Target getTarget(TargetInvocation invocation) throws TargetNotFoundException, TargetLoadingException {
 		VariableSource oldVariableSource = ourVariableSource.get();
 		Build currentBuild = Build.getCurrent();
 		ourVariableSource.set(Variables.sourceFromChain(
@@ -47,14 +47,14 @@ public class YamlTargetLoader implements TargetRepository {
 		}
 	}
 
-	private Map getTargetDefinition(String targetName) throws TargetDefinitionLoadingException {
+	private Map getTargetDefinition(String targetName) throws TargetNotFoundException, TargetDefinitionLoadingException {
 		if (!myTargetDefinitions.containsKey(targetName)) {
 			myTargetDefinitions.put(targetName, loadDefinition(targetName));
 		}
 		return myTargetDefinitions.get(targetName);
 	}
 
-	private Map loadDefinition(String targetName) throws TargetDefinitionLoadingException {
+	private Map loadDefinition(String targetName) throws TargetNotFoundException, TargetDefinitionLoadingException {
 		Log.verbose("Loading target from YAML definition");
 		Object document = loadYamlDocument(targetName);
 		if (!(document instanceof Map)) {
@@ -63,12 +63,12 @@ public class YamlTargetLoader implements TargetRepository {
 		return (Map) document;
 	}
 
-	private Object loadYamlDocument(String targetName) throws TargetDefinitionLoadingException {
+	private Object loadYamlDocument(String targetName) throws TargetNotFoundException, TargetDefinitionLoadingException {
 		Log.debug("Requesting definition stream from source");
 		try (InputStream targetDefStream = myTargetDefinitionStreamSource.getStreamForTarget(targetName + ".yaml")) {
 			if (targetDefStream == null) {
 				Log.verbose("Target definition not found; throwing");
-				throw new TargetDefinitionNotFoundException(targetName);
+				throw new TargetNotFoundException(targetName);
 			}
 			Log.debug("Parsing YAML stream");
 			return new Yaml(new SafeConstructor()).load(targetDefStream);

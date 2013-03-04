@@ -1,8 +1,8 @@
 package org.msyu.reinforce;
 
-public class TargetDefinitionNotFoundException extends TargetDefinitionLoadingException {
+public class TargetNotFoundException extends BuildException {
 
-	public TargetDefinitionNotFoundException(final String targetName) {
+	public TargetNotFoundException(String targetName) {
 		super(targetName);
 	}
 
@@ -10,4 +10,5 @@ public class TargetDefinitionNotFoundException extends TargetDefinitionLoadingEx
 	public String getMessage() {
 		return String.format("Couldn't find definition of target: %s", super.getMessage());
 	}
+
 }
