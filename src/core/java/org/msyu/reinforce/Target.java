@@ -31,7 +31,9 @@ public abstract class Target implements Reinterpretable {
 	}
 
 	public Set<TargetInvocation> getDependencyTargets() {
-		return Collections.unmodifiableSet(myDependencyTargets);
+		return myDependencyTargets != null ?
+				Collections.unmodifiableSet(myDependencyTargets) :
+				Collections.<TargetInvocation>emptySet();
 	}
 
 

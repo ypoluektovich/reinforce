@@ -85,11 +85,9 @@ public class YamlTargetLoader implements TargetRepository {
 			fallbackTargetInvocation = getFallbackTargetInvocation(docMap);
 			Target target = createTargetObject(docMap, invocation);
 			target.setDefinitionDocument(docMap);
-			target.setDependencyTargets(
-					docMap.containsKey(TARGET_DEPENDENCY_KEY) ?
-							parseTargetDependencies(docMap.get(TARGET_DEPENDENCY_KEY)) :
-							Collections.<TargetInvocation>emptySet()
-			);
+			if (docMap.containsKey(TARGET_DEPENDENCY_KEY)) {
+				target.setDependencyTargets(parseTargetDependencies(docMap.get(TARGET_DEPENDENCY_KEY)));
+			}
 			Log.debug("Target object ready for initialization");
 			return target;
 		} catch (TargetConstructionException e) {
