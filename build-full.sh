@@ -29,4 +29,15 @@ echo "========= Building ivy with Ivy-enabled Reinforce"
 java -cp build/core/reinforce-core.jar:build/ivy/reinforce-ivy.jar:lib/snakeyaml-1.11.jar:lib/ivy-2.3.0.jar org.msyu.reinforce.Main build_ivy
 (( $? == 0 )) || exit 1
 
+
+echo ""
+echo "========= Building junit"
+java -cp lib/snakeyaml-1.11.jar:lib/ivy-2.3.0.jar:lib/junit-4.11.jar:lib/hamcrest-core-1.3.jar:build/core/reinforce-core.jar:build/ivy/reinforce-ivy.jar org.msyu.reinforce.Main build_junit
+
+
+echo ""
+echo "========= Building core+ivy+junit with JUnit-enabled Reinforce"
+java -cp lib/snakeyaml-1.11.jar:lib/ivy-2.3.0.jar:lib/junit-4.11.jar:lib/hamcrest-core-1.3.jar:build/core/reinforce-core.jar:build/ivy/reinforce-ivy.jar:build/junit/reinforce-junit.jar org.msyu.reinforce.Main build_core build_ivy build_junit
+
+
 exit 0
