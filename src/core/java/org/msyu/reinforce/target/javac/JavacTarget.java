@@ -19,9 +19,7 @@ import org.msyu.reinforce.resources.ResourceIterator;
 
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 public class JavacTarget extends Target implements ResourceCollection {
@@ -38,10 +36,23 @@ public class JavacTarget extends Target implements ResourceCollection {
 	public static final String ON_EMPTY_SOURCE_KEY = "on empty source";
 
 	public static enum ActionOnEmptySource {
-		DIE, WARN, SKIP
+
+		DIE("die"), WARN("warn"), SKIP("skip");
+
+		private final String mySetting;
+
+		private ActionOnEmptySource(String setting) {
+			mySetting = setting;
+		}
+
+		@Override
+		public String toString() {
+			return mySetting;
+		}
+
 	}
 
-	public static final String EMPTY_SOURCE_MESSAGE = "Attempted compiling empty source collection, result will be empty too";
+	public static final String EMPTY_SOURCE_MESSAGE = "No source files found to compile; result will be empty too";
 
 
 	public static final String CLASSPATH_KEY = "classpath";
@@ -51,7 +62,7 @@ public class JavacTarget extends Target implements ResourceCollection {
 
 	private ResourceCollection mySources;
 
-	private ActionOnEmptySource myActionOnEmptySource = ActionOnEmptySource.DIE;
+	private ActionOnEmptySource myActionOnEmptySource;
 
 	private ResourceCollection myClasspath;
 
@@ -85,14 +96,15 @@ public class JavacTarget extends Target implements ResourceCollection {
 		if (docMap.containsKey(ON_EMPTY_SOURCE_KEY)) {
 			Object setting = docMap.get(ON_EMPTY_SOURCE_KEY);
 			for (ActionOnEmptySource action : ActionOnEmptySource.values()) {
-				if (action.name().toLowerCase(Locale.ENGLISH).equals(setting)) {
+				if (action.toString().equals(setting)) {
 					myActionOnEmptySource = action;
 				}
 			}
-			throw new TargetInitializationException(
-					"value of '" + ON_EMPTY_SOURCE_KEY + "' must be one of: " +
-							Arrays.toString(ActionOnEmptySource.values())
-			);
+			if (myActionOnEmptySource == null) {
+				throw new TargetInitializationException("unsupported value of '" + ON_EMPTY_SOURCE_KEY + "'");
+			}
+		} else {
+			myActionOnEmptySource = ActionOnEmptySource.DIE;
 		}
 	}
 
@@ -123,7 +135,9 @@ public class JavacTarget extends Target implements ResourceCollection {
 
 	@Override
 	public void run() throws ExecutionException {
-		checkEmptySource();
+		if (checkEmptySource()) {
+			return;
+		}
 		Path destinationPath = myJavaCompiler.execute(getInvocation().getTargetName(), mySources, myClasspath);
 		myClassFiles = FileCollections.fromPath(destinationPath);
 		try {
@@ -133,11 +147,11 @@ public class JavacTarget extends Target implements ResourceCollection {
 		}
 	}
 
-	private void checkEmptySource() throws ExecutionException {
+	private boolean checkEmptySource() throws ExecutionException {
 		try {
 			Log.debug("Checking that source collection is not empty...");
 			if (!mySources.isEmpty()) {
-				return;
+				return false;
 			}
 		} catch (ResourceEnumerationException e) {
 			throw new ExecutionException("error while checking presence of sources", e);
@@ -151,6 +165,7 @@ public class JavacTarget extends Target implements ResourceCollection {
 			Log.info(EMPTY_SOURCE_MESSAGE);
 		}
 		myClassFiles = EmptyResourceCollection.INSTANCE;
+		return true;
 	}
 
 	@Override
