@@ -108,16 +108,13 @@ public abstract class AbstractJavac implements JavaCompiler {
 	private void writeSourcesFile(Path sourcesFile, ResourceCollection sources) throws ExecutionException {
 		try {
 			Log.debug("Writing sources file: %s", sourcesFile);
-			ResourceIterator resourceIterator = sources.getResourceIterator();
-			Path sourceElement = getNextFile(resourceIterator);
-			if (sourceElement == null) {
-				throw new ExecutionException("source list is empty");
-			}
 			try (BufferedWriter writer = Files.newBufferedWriter(sourcesFile, Charset.forName("UTF-8"))) {
-				do {
+				ResourceIterator resourceIterator = sources.getResourceIterator();
+				Path sourceElement;
+				while ((sourceElement = getNextFile(resourceIterator)) != null) {
 					writer.write(Build.getCurrent().getBasePath().resolve(sourceElement).toString());
 					writer.newLine();
-				} while ((sourceElement = getNextFile(resourceIterator)) != null);
+				}
 				Log.debug("Closing sources file");
 			} catch (IOException e) {
 				throw new ExecutionException("I/O error while saving the list of files to be compiled", e);

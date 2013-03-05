@@ -6,7 +6,10 @@ import org.msyu.reinforce.ReinterpretationException;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
 import org.msyu.reinforce.TargetInvocation;
+import org.msyu.reinforce.resources.EmptyResourceCollection;
 import org.msyu.reinforce.resources.FileCollections;
+import org.msyu.reinforce.resources.FilteringResourceCollection;
+import org.msyu.reinforce.resources.RegexResourceFilter;
 import org.msyu.reinforce.resources.Resource;
 import org.msyu.reinforce.resources.ResourceAccessException;
 import org.msyu.reinforce.resources.ResourceCollection;
@@ -16,7 +19,9 @@ import org.msyu.reinforce.resources.ResourceIterator;
 
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class JavacTarget extends Target implements ResourceCollection {
@@ -27,37 +32,68 @@ public class JavacTarget extends Target implements ResourceCollection {
 
 	public static final String COMPILER_TYPE_EXTERNAL = "external";
 
+
 	public static final String SOURCE_KEY = "source";
 
+	public static final String ON_EMPTY_SOURCE_KEY = "on empty source";
+
+	public static enum ActionOnEmptySource {
+		DIE, WARN, SKIP
+	}
+
+	public static final String EMPTY_SOURCE_MESSAGE = "Attempted compiling empty source collection, result will be empty too";
+
+
 	public static final String CLASSPATH_KEY = "classpath";
+
 
 	private JavaCompiler myJavaCompiler;
 
 	private ResourceCollection mySources;
 
+	private ActionOnEmptySource myActionOnEmptySource = ActionOnEmptySource.DIE;
+
 	private ResourceCollection myClasspath;
 
 	private ResourceCollection myClassFiles;
 
+
 	public JavacTarget(TargetInvocation invocation) {
 		super(invocation);
 	}
+
 
 	@Override
 	protected void initTarget(Map docMap)
 			throws TargetInitializationException
 	{
 		myJavaCompiler = prepareCompiler(docMap);
-		mySources = prepareSource(docMap);
+		prepareSource(docMap);
 		myClasspath = prepareClasspath(docMap);
 	}
 
-	private ResourceCollection prepareSource(Map docMap) throws TargetInitializationException {
+	private void prepareSource(Map docMap) throws TargetInitializationException {
 		Log.debug("Parsing source setting");
 		if (!docMap.containsKey(SOURCE_KEY)) {
 			throw new TargetInitializationException("missing required parameter '" + SOURCE_KEY + "'");
 		}
-		return ResourceCollections.interpret(docMap.get(SOURCE_KEY));
+		mySources = new FilteringResourceCollection(
+				ResourceCollections.interpret(docMap.get(SOURCE_KEY)),
+				new RegexResourceFilter("\\.java$")
+		);
+
+		if (docMap.containsKey(ON_EMPTY_SOURCE_KEY)) {
+			Object setting = docMap.get(ON_EMPTY_SOURCE_KEY);
+			for (ActionOnEmptySource action : ActionOnEmptySource.values()) {
+				if (action.name().toLowerCase(Locale.ENGLISH).equals(setting)) {
+					myActionOnEmptySource = action;
+				}
+			}
+			throw new TargetInitializationException(
+					"value of '" + ON_EMPTY_SOURCE_KEY + "' must be one of: " +
+							Arrays.toString(ActionOnEmptySource.values())
+			);
+		}
 	}
 
 	private ResourceCollection prepareClasspath(Map docMap) throws TargetInitializationException {
@@ -87,14 +123,34 @@ public class JavacTarget extends Target implements ResourceCollection {
 
 	@Override
 	public void run() throws ExecutionException {
+		checkEmptySource();
 		Path destinationPath = myJavaCompiler.execute(getInvocation().getTargetName(), mySources, myClasspath);
-
 		myClassFiles = FileCollections.fromPath(destinationPath);
 		try {
 			myClassFiles.rebuildCache();
 		} catch (ResourceEnumerationException e) {
 			throw new ExecutionException("error while enumerating compiled class files", e);
 		}
+	}
+
+	private void checkEmptySource() throws ExecutionException {
+		try {
+			Log.debug("Checking that source collection is not empty...");
+			if (!mySources.isEmpty()) {
+				return;
+			}
+		} catch (ResourceEnumerationException e) {
+			throw new ExecutionException("error while checking presence of sources", e);
+		}
+		if (myActionOnEmptySource == ActionOnEmptySource.DIE) {
+			throw new ExecutionException("source list is empty");
+		}
+		if (myActionOnEmptySource == ActionOnEmptySource.WARN) {
+			Log.warn(EMPTY_SOURCE_MESSAGE);
+		} else {
+			Log.info(EMPTY_SOURCE_MESSAGE);
+		}
+		myClassFiles = EmptyResourceCollection.INSTANCE;
 	}
 
 	@Override
