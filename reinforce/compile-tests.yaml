@@ -1,0 +1,7 @@
+depends on: [ jar , libs@test ]
+type: javac
+source: src/${module.name}/test
+on empty source: skip
+classpath:
+ - jar
+ - libs@test

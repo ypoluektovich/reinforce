@@ -1,0 +1,3 @@
+depends on: [ jar, run-tests ]
+type: source
+target: jar

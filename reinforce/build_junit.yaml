@@ -1,7 +1,7 @@
 depends on: build_core
 type: reinforce
-sandbox path: build/ivy
+sandbox path: build/junit
 variables:
-  module.name: ivy
+  module.name: junit
 inherit targets: build_core
 targets: build-module

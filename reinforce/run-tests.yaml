@@ -1,0 +1,17 @@
+fallback: nop
+depends on: [ jar , compile-tests ]
+type: junit
+tests:
+  all in: compile-tests
+  classpath:
+    - jar
+    - target: ^build_
+      match: regex
+      as: result of jar
+      allow empty: yes
+    - libs@default
+    - target: ^build_
+      match: regex
+      as: result of libs@default
+      allow empty: yes
+    - libs@test
