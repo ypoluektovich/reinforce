@@ -43,7 +43,7 @@ public class Main {
 		try {
 			reinforce.executeNewBuild(basePath, sandboxPath, null, null, invocations);
 		} catch (BuildException e) {
-			e.printStackTrace();
+			reportBuildException(e);
 			System.exit(ERROR_EXIT_STATUS);
 		}
 	}
@@ -58,6 +58,24 @@ public class Main {
 			return null;
 		}
 		return new Reinforce(targetDefLocation);
+	}
+
+	private static void reportBuildException(BuildException e) {
+		if (!Log.getLevel().acceptMessageOfLevel(Log.Level.DEBUG)) {
+			overwriteStackTraces(e);
+		}
+		e.printStackTrace();
+	}
+
+	private static void overwriteStackTraces(Throwable throwable) {
+		if (throwable == null) {
+			return;
+		}
+		throwable.setStackTrace(new StackTraceElement[0]);
+		overwriteStackTraces(throwable.getCause());
+		for (Throwable suppressed : throwable.getSuppressed()) {
+			overwriteStackTraces(suppressed);
+		}
 	}
 
 }

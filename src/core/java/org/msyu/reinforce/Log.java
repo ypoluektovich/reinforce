@@ -4,7 +4,7 @@ public class Log {
 
 	public static final String LOG_LEVEL_PROPERTY = "reinforce.logging";
 
-	private static enum Level {
+	public static enum Level {
 		ANY(Integer.MIN_VALUE, ""),
 		DEBUG(-2, "dd"),
 		VERBOSE(-1, "vv"),
@@ -12,24 +12,25 @@ public class Log {
 		WARN(1, "WW"),
 		ERROR(1, "EE");
 
-		private final int levelCode;
+		private final int myLevelCode;
 
-		private final String prefix;
+		private final String myPrefix;
 
 		private Level(int levelCode, String prefix) {
-			this.levelCode = levelCode;
-			this.prefix = prefix;
+			this.myLevelCode = levelCode;
+			this.myPrefix = prefix;
 		}
 
 		public boolean acceptMessageOfLevel(Level other) {
-			return this.levelCode <= other.levelCode;
+			return this.myLevelCode <= other.myLevelCode;
 		}
+
 		public String getPrefix() {
-			return prefix;
+			return myPrefix;
 		}
 	}
 
-	private static Level LEVEL = Level.INFO;
+	private static Level ourLevel = Level.INFO;
 
 	static {
 		String loggingLevel = System.getProperty(LOG_LEVEL_PROPERTY);
@@ -41,7 +42,7 @@ public class Log {
 	public static boolean setLevel(String levelCode) {
 		for (Level level : Level.values()) {
 			if (level.name().equalsIgnoreCase(levelCode)) {
-				LEVEL = level;
+				ourLevel = level;
 				log(Level.ANY, "Set logging level to %s", level);
 				return true;
 			}
@@ -49,33 +50,37 @@ public class Log {
 		return false;
 	}
 
+	public static Level getLevel() {
+		return ourLevel;
+	}
+
 
 	public static void error(String message, Object... parameters) {
-		if (LEVEL.acceptMessageOfLevel(Level.ERROR)) {
+		if (ourLevel.acceptMessageOfLevel(Level.ERROR)) {
 			log(Level.ERROR, message, parameters);
 		}
 	}
 
 	public static void warn(String message, Object... parameters) {
-		if (LEVEL.acceptMessageOfLevel(Level.WARN)) {
+		if (ourLevel.acceptMessageOfLevel(Level.WARN)) {
 			log(Level.WARN, message, parameters);
 		}
 	}
 
 	public static void info(String message, Object... parameters) {
-		if (LEVEL.acceptMessageOfLevel(Level.INFO)) {
+		if (ourLevel.acceptMessageOfLevel(Level.INFO)) {
 			log(Level.INFO, message, parameters);
 		}
 	}
 
 	public static void verbose(String message, Object... parameters) {
-		if (LEVEL.acceptMessageOfLevel(Level.VERBOSE)) {
+		if (ourLevel.acceptMessageOfLevel(Level.VERBOSE)) {
 			log(Level.VERBOSE, message, parameters);
 		}
 	}
 
 	public static void debug(String message, Object... parameters) {
-		if (LEVEL.acceptMessageOfLevel(Level.DEBUG)) {
+		if (ourLevel.acceptMessageOfLevel(Level.DEBUG)) {
 			log(Level.DEBUG, message, parameters);
 		}
 	}
@@ -87,7 +92,7 @@ public class Log {
 	}
 
 	public static void stackTrace(Throwable t) {
-		if (LEVEL.acceptMessageOfLevel(Level.DEBUG)) {
+		if (ourLevel.acceptMessageOfLevel(Level.DEBUG)) {
 			t.printStackTrace();
 		}
 	}
