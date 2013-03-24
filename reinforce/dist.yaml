@@ -1,0 +1,10 @@
+depends on: [ build_core, build_ivy, build_junit ]
+type: jar
+source:
+  - target: ^build_
+    match: regex
+    as: result of compile
+  - target: ^build_
+    match: regex
+    as: result of resources
+destination: build/reinforce.jar

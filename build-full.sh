@@ -40,4 +40,14 @@ echo "========= Building core+ivy+junit with JUnit-enabled Reinforce"
 java -cp lib/snakeyaml-1.11.jar:lib/ivy-2.3.0.jar:lib/junit-4.11.jar:lib/hamcrest-core-1.3.jar:build/core/reinforce-core.jar:build/ivy/reinforce-ivy.jar:build/junit/reinforce-junit.jar org.msyu.reinforce.Main build_core build_ivy build_junit
 
 
+echo ""
+echo "========= Building dist"
+java -cp lib/snakeyaml-1.11.jar:lib/ivy-2.3.0.jar:lib/junit-4.11.jar:lib/hamcrest-core-1.3.jar:build/core/reinforce-core.jar:build/ivy/reinforce-ivy.jar:build/junit/reinforce-junit.jar org.msyu.reinforce.Main dist
+
+
+echo ""
+echo "========= Building dist again"
+java -cp lib/snakeyaml-1.11.jar:lib/ivy-2.3.0.jar:lib/junit-4.11.jar:lib/hamcrest-core-1.3.jar:build/reinforce.jar org.msyu.reinforce.Main dist
+
+
 exit 0
