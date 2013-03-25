@@ -14,22 +14,18 @@ Disclaimer:
   She lacks a lot of features that are common among the more mature builders.
   Use at your own risk and frustration.
 
-Core dependencies:
+Dependencies:
  - Java 1.7
- - snakeyaml 1.11
+ - Snakeyaml 1.11
+ - Ivy 2.3.0
+ - JUnit 4.11 (and its transitive dependency, hamcrest-core 1.3)
+This list might not be up-to-date. The definitive source on the dependencies
+is the src/*/ivy.xml files.
 
 Build time dependencies:
- - some kind of Linux (look at *.sh to see why)
- - curl (for third party library retrieval)
+ - some kind of Linux (look at *.sh to see why);
+ - an Ivy installation that provides the `ivy' executable.
 
-Runtime dependencies:
- - all build dependencies
- - tools.jar from the Oracle JDK distribution
-   (though only if you use the javac target)
-
-To build Reinforce from scratch, run:
-$ ./retrieve.lib.sh
-$ ./build.sh
-
-After that's done, Reinforce can build herself:
-$ java -cp reinforce.jar:tools.jar jar
+This command will build Reinforce from scratch:
+$ ./build-full.sh
+If all goes well, this will create the file build/reinforce.jar.
