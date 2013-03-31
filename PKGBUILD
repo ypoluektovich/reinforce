@@ -1,13 +1,12 @@
 # Maintainer: Yanus Poluektovich <ypoiluektovich@gmail.com>
 pkgname=reinforce
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="A build tool for java"
 arch=('any')
 url="https://github.com/ypoluektovich/reinforce"
 license=('unknown')
 depends=('java-environment>=7' 'junit>=4.11-3' 'apache-ivy>=2.3.0')
-conflicts=('reinforce')
 source=(
     "https://github.com/ypoluektovich/reinforce/archive/v$pkgver.tar.gz"
     "ivysettings-local.xml"
@@ -15,10 +14,10 @@ source=(
     "rein"
     )
 noextract=()
-md5sums=('24d9d03932ffbaeae6583ae459330eae'
-         '1f3449a3b7ebcdd811e5e8056bfb3519'
-         '0c8db58f3be81f5dee5ae592cb3e296f'
-         '364109ee807c4bef7db1a72038171d8c')
+sha512sums=('21b24a6be057ca21232f4bd3f5604ccaf433199b0a383c6f3d86b99ec80a326b799954bc5484e9c92b3db191e42cbd9645632d57ba52aed38430dac2cd1c17dd'
+            'e1410bae91d04b0a0f194655a542e42f34ee8cebf6b0bb8606a9ed54523183aef6d436471d7445de34c93082d057f15409f87c18a8b2ea4cd511a10590779748'
+            '283a4cc25cdaaf0047132ff426765f539d356f8f03068972b8375e231169c5f3cd7015ca2934e4bf1b1fde1359b84173289eeda54bd6179804dd5412116ab8d0'
+            '00ced3b684efeeeba491e7aca41ade3a4ee050ae1d6a744404388e713796a277e5a5a19dfccab43a62e526bf21c2c43a49af7f04ada7fbb94d5447a0ab661825')
 
 build() {
   cd "${srcdir}/${pkgname}-${pkgver}"
