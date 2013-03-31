@@ -1,0 +1,10 @@
+diff --git a/ivysettings.xml b/ivysettings.xml
+index 0747414..f6687b1 100644
+--- a/ivysettings.xml
++++ b/ivysettings.xml
+@@ -1,4 +1,5 @@
+ <ivysettings>
++    <include file="../ivysettings-local.xml" optional="true"/>
+     <settings defaultResolver="maven2"/>
+     <resolvers>
+         <ibiblio name="maven2" m2compatible="true"/>
