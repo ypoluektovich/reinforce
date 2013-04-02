@@ -66,7 +66,7 @@ public abstract class AbstractArchiveTarget<T extends Closeable> extends Target 
 		if (!(destinationObject instanceof String)) {
 			throw new TargetInitializationException("invalid destination: must be a string");
 		}
-		String expandedDestination = null;
+		String expandedDestination;
 		try {
 			expandedDestination = Variables.expand((String) destinationObject);
 		} catch (VariableSubstitutionException e) {
