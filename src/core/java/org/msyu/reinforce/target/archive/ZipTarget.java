@@ -14,6 +14,11 @@ public class ZipTarget extends AbstractArchiveTarget<ZipOutputStreamWrapper> {
 	}
 
 	@Override
+	protected final String getDefaultFileExtension() {
+		return "zip";
+	}
+
+	@Override
 	protected ZipOutputStreamWrapper openArchive(Path destinationPath) throws IOException {
 		return new ZipOutputStreamWrapper(destinationPath);
 	}

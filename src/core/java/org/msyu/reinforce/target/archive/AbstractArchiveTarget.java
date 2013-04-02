@@ -83,7 +83,7 @@ public abstract class AbstractArchiveTarget<T extends Closeable> extends Target 
 	@Override
 	public void run() throws ExecutionException {
 		Path destinationPath = myDestinationPath == null ?
-				Build.getCurrent().getSandboxPath().resolve(getInvocation() + ".zip") :
+				Build.getCurrent().getSandboxPath().resolve(getInvocation() + "." + getDefaultFileExtension()) :
 				Build.getCurrent().getBasePath().resolve(myDestinationPath);
 		try {
 			Log.verbose("Clearing the destination path");
@@ -111,6 +111,8 @@ public abstract class AbstractArchiveTarget<T extends Closeable> extends Target 
 			throw new ExecutionException("error while writing into the archive", e);
 		}
 	}
+
+	protected abstract String getDefaultFileExtension();
 
 	protected abstract T openArchive(Path destinationPath) throws IOException;
 

@@ -14,6 +14,11 @@ public class JarTarget extends AbstractArchiveTarget<JarOutputStreamWrapper> {
 	}
 
 	@Override
+	protected final String getDefaultFileExtension() {
+		return "jar";
+	}
+
+    @Override
 	protected JarOutputStreamWrapper openArchive(Path destinationPath) throws IOException {
 		return new JarOutputStreamWrapper(destinationPath);
 	}
