@@ -1,7 +1,7 @@
 # Maintainer: Yanus Poluektovich <ypoiluektovich@gmail.com>
 pkgname=reinforce
-pkgver=0.1.0
-pkgrel=2
+pkgver=0.1.1
+pkgrel=1
 pkgdesc="A build tool for java"
 arch=('any')
 url="https://github.com/ypoluektovich/reinforce"
