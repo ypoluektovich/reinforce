@@ -45,7 +45,7 @@ public class ReinforceTarget extends Target {
 
 	private Path mySandboxPath;
 
-	private Map<String, String> myVariables;
+	private Map<String, Object> myVariables;
 
 	private Map<TargetInvocation, Target> myInheritedTargets;
 
@@ -101,29 +101,50 @@ public class ReinforceTarget extends Target {
 		myVariables = new HashMap<>();
 		Object variableDefs = docMap.get(VARIABLES_KEY);
 		if (!(variableDefs instanceof Map)) {
-			throw newVariableInitializationException();
+			throw new TargetInitializationException("variable definitions must be specified as a name-value mapping");
 		}
 		for (Map.Entry<?, ?> variable : ((Map<?, ?>) variableDefs).entrySet()) {
-			if (variable.getKey() instanceof String && variable.getValue() instanceof String) {
-				try {
-					myVariables.put(
-							Variables.expand((String) variable.getKey()),
-							Variables.expand((String) variable.getValue())
-					);
-				} catch (VariableSubstitutionException e) {
-					throw new TargetInitializationException(
-							"error while expanding variables in '" + VARIABLES_KEY + "' setting",
-							e
-					);
-				}
-			} else {
-				throw newVariableInitializationException();
-			}
+			myVariables.put(getVariableName(variable), getVariableValue(variable));
 		}
 	}
 
-	private TargetInitializationException newVariableInitializationException() {
-		return new TargetInitializationException("variable definitions must be specified as a string-string mapping");
+	private static String getVariableName(Map.Entry<?, ?> variableDefEntry) throws TargetInitializationException {
+		Object unexpandedNameObject = variableDefEntry.getKey();
+		if (!(unexpandedNameObject instanceof String)) {
+			throw new TargetInitializationException("new variable names must be specified as strings");
+		}
+		String unexpandedNameString = (String) unexpandedNameObject;
+		Object expandedNameObject;
+		try {
+			expandedNameObject = Variables.expand(unexpandedNameString);
+		} catch (VariableSubstitutionException e) {
+			throw new TargetInitializationException(
+					"error while expanding variables in new variable name definition '" + unexpandedNameString + "'",
+					e
+			);
+		}
+		if (!(expandedNameObject instanceof String)) {
+			throw new TargetInitializationException("new variable names must be strings after variable expansion");
+		}
+		return (String) expandedNameObject;
+	}
+
+	private static Object getVariableValue(Map.Entry<?, ?> variable) throws TargetInitializationException {
+		Object unexpandedValueObject = variable.getValue();
+		if (!(unexpandedValueObject instanceof String)) {
+			throw new TargetInitializationException("new variable values must be specified as strings");
+		}
+		String unexpandedValueString = (String) unexpandedValueObject;
+		Object value;
+		try {
+			value = Variables.expand(unexpandedValueString);
+		} catch (VariableSubstitutionException e) {
+			throw new TargetInitializationException(
+					"error while expanding variables in new variable value definition '" + unexpandedValueString + "'",
+					e
+			);
+		}
+		return value;
 	}
 
 
@@ -150,7 +171,11 @@ public class ReinforceTarget extends Target {
 		}
 		String expandedTargetDef;
 		try {
-			expandedTargetDef = Variables.expand((String) inheritedTargetDef);
+			Object expandedTargetDefObject = Variables.expand((String) inheritedTargetDef);
+			if (!(expandedTargetDefObject instanceof String)) {
+				throw new TargetInitializationException("inherited target was variable-expanded to a non-string");
+			}
+			expandedTargetDef = (String) expandedTargetDefObject;
 		} catch (VariableSubstitutionException e) {
 			throw new TargetInitializationException("error while expanding variables in inherited target spec", e);
 		}
@@ -180,7 +205,11 @@ public class ReinforceTarget extends Target {
 		}
 		String expandedTargetSpec;
 		try {
-			expandedTargetSpec = Variables.expand((String) targetSpec);
+			Object expandedTargetSpecObject = Variables.expand((String) targetSpec);
+			if (!(expandedTargetSpecObject instanceof String)) {
+				throw new TargetInitializationException("target invocation was variable-expanded to a non-string");
+			}
+			expandedTargetSpec = (String) expandedTargetSpecObject;
 		} catch (VariableSubstitutionException e) {
 			throw new TargetInitializationException("error while expanding variables in target invocation spec in position " + index);
 		}

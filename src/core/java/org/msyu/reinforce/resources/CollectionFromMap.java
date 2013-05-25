@@ -50,7 +50,7 @@ public class CollectionFromMap {
 		if (targetObject != null) {
 			matchedItems = matchTargets(targetObject, defMap);
 		} else /* locationObject != null */ {
-			matchedItems = matchLocations(locationObject, defMap);
+			matchedItems = matchLocations(locationObject);
 		}
 		Log.debug("Matched %d items...", matchedItems.size());
 
@@ -157,14 +157,18 @@ public class CollectionFromMap {
 		}
 	}
 
-	private static List<Object> matchLocations(Object locationSetting, Map defMap) throws ResourceConstructionException {
+	private static List<Object> matchLocations(Object locationSetting) throws ResourceConstructionException {
 		Log.debug("Interpreting location as base collection...");
 		if (!(locationSetting instanceof String)) {
 			throw new ResourceConstructionException("location must be a string (a path in file system)");
 		}
 		String locationString;
 		try {
-			locationString = Variables.expand((String) locationSetting);
+			Object expandedLocation = Variables.expand((String) locationSetting);
+			if (!(expandedLocation instanceof String)) {
+				throw new ResourceConstructionException("location string was variable-expanded to a non-string");
+			}
+			locationString = (String) expandedLocation;
 		} catch (VariableSubstitutionException e) {
 			throw new ResourceConstructionException("error while expanding variables in location setting", e);
 		}

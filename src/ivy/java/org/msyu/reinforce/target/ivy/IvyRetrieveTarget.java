@@ -98,18 +98,24 @@ public class IvyRetrieveTarget extends Target implements ResourceCollection {
 		}
 		if (docMap.containsKey(IVY_XML_KEY)) {
 			Object ivyXmlString = docMap.get(IVY_XML_KEY);
-			if (ivyXmlString instanceof String) {
-				try {
-					myIvyXmlPath = Paths.get(Variables.expand((String) ivyXmlString));
-				} catch (VariableSubstitutionException e) {
-					throw new TargetInitializationException(
-							"error while expanding variables in '" + IVY_XML_KEY + "' setting",
-							e
-					);
-				}
-			} else {
+			if (!(ivyXmlString instanceof String)) {
 				throw new TargetInitializationException("value of '" + IVY_XML_KEY + "' must be a string");
 			}
+			Object expandedIvyXml;
+			try {
+				expandedIvyXml = Variables.expand((String) ivyXmlString);
+			} catch (VariableSubstitutionException e) {
+				throw new TargetInitializationException(
+						"error while expanding variables in '" + IVY_XML_KEY + "' setting",
+						e
+				);
+			}
+			if (!(expandedIvyXml instanceof String)) {
+				throw new TargetInitializationException(
+						"'" + IVY_XML_KEY + "' setting value was variable-expanded to a non-string");
+			}
+			myIvyXmlPath = Paths.get((String) expandedIvyXml);
+
 		} else {
 			myIvyXmlPath = Paths.get("ivy.xml");
 		}
@@ -153,11 +159,16 @@ public class IvyRetrieveTarget extends Target implements ResourceCollection {
 		if (!(confSetting instanceof String)) {
 			throw new TargetInitializationException("invalid setting under '" + CONFS_KEY + "' at #" + index + ": must be a string");
 		}
+		Object expandedConfSetting;
 		try {
-			return Variables.expand((String) confSetting);
+			expandedConfSetting = Variables.expand((String) confSetting);
 		} catch (VariableSubstitutionException e) {
 			throw new TargetInitializationException("error while expanding variables in element " + index + " of '" + CONFS_KEY + "'", e);
 		}
+		if (!(expandedConfSetting instanceof String)) {
+			throw new TargetInitializationException("'" + CONFS_KEY + "' setting was variable-expanded to a non-string");
+		}
+		return (String) expandedConfSetting;
 	}
 
 	@Override

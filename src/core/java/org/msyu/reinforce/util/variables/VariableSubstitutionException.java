@@ -2,7 +2,7 @@ package org.msyu.reinforce.util.variables;
 
 import org.msyu.reinforce.TargetLoadingException;
 
-public class VariableSubstitutionException extends TargetLoadingException {
+public abstract class VariableSubstitutionException extends TargetLoadingException {
 
 	protected VariableSubstitutionException(String message) {
 		super(message);

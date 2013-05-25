@@ -111,7 +111,11 @@ public class YamlTargetLoader implements TargetRepository {
 		}
 		String fallbackTargetSpec;
 		try {
-			fallbackTargetSpec = Variables.expand((String) fallbackTargetSetting, ourVariableSource.get());
+			Object expandedFallbackSpec = Variables.expand((String) fallbackTargetSetting, ourVariableSource.get());
+			if (!(expandedFallbackSpec instanceof String)) {
+				throw new TargetConstructionException("fallback setting was variable-expanded to a non-string");
+			}
+			fallbackTargetSpec = (String) expandedFallbackSpec;
 		} catch (VariableSubstitutionException e) {
 			throw new TargetConstructionException("error while expanding variables in fallback setting", e);
 		}
@@ -151,9 +155,13 @@ public class YamlTargetLoader implements TargetRepository {
 		if (!(dependencyObject instanceof String)) {
 			throw new InvalidTargetDependencyException("dependencies must be listed as strings");
 		}
-		String expandedDependency = null;
+		String expandedDependency;
 		try {
-			expandedDependency = Variables.expand((String) dependencyObject, ourVariableSource.get());
+			Object expandedDependencyObject = Variables.expand((String) dependencyObject, ourVariableSource.get());
+			if (!(expandedDependencyObject instanceof String)) {
+				throw new InvalidTargetDependencyException("target dependency was variable-expanded to a non-string");
+			}
+			expandedDependency = (String) expandedDependencyObject;
 		} catch (VariableSubstitutionException e) {
 			throw new InvalidTargetDependencyException("error while expanding variables in dependency spec", e);
 		}

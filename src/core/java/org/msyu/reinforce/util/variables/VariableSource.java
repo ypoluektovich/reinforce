@@ -4,6 +4,6 @@ public interface VariableSource {
 
 	boolean isDefined(String variableName);
 
-	String getValueOf(String variableName) throws UndefinedVariableException;
+	Object getValueOf(String variableName) throws UndefinedVariableException;
 
 }

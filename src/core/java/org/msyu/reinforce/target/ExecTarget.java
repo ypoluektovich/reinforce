@@ -48,7 +48,12 @@ public class ExecTarget extends Target {
 		}
 		String expandedArgument;
 		try {
-			expandedArgument = Variables.expand((String) argumentSetting);
+			Object expandedArgumentObject = Variables.expand((String) argumentSetting);
+			if (!(expandedArgumentObject instanceof String)) {
+				throw new TargetInitializationException("argument at position " + index +
+						" was variable-expanded to a non-string");
+			}
+			expandedArgument = (String) expandedArgumentObject;
 		} catch (VariableSubstitutionException e) {
 			throw new TargetInitializationException("error while expanding variables in command argument #" + index, e);
 		}
@@ -80,4 +85,5 @@ public class ExecTarget extends Target {
 			throw new ExecutionException("external process exited with non-zero code: " + exitCode);
 		}
 	}
+
 }

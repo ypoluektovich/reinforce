@@ -35,14 +35,10 @@ public final class TargetInvocation {
 		}
 	}
 
-	private static void serializeParameters(Map<String, String> parameters, StringBuilder sb) {
-		sb.append(parameters.toString());
-	}
-
 
 	private final String myTargetName;
 
-	private final Map<String, String> myParameters;
+	private final Map<String, Object> myParameters;
 
 	public TargetInvocation(String targetName) {
 		this(targetName, (Map<String, String>) null);
@@ -54,14 +50,14 @@ public final class TargetInvocation {
 
 	private TargetInvocation(String targetName, Map<String, String> parameters) {
 		myTargetName = Objects.requireNonNull(targetName, "target name cannot be null");
-		myParameters = (parameters == null) ? null : new LinkedHashMap<>(parameters);
+		myParameters = (parameters == null) ? null : new LinkedHashMap<String, Object>(parameters);
 	}
 
 	public final String getTargetName() {
 		return myTargetName;
 	}
 
-	public final Map<String, String> getParameters() {
+	public final Map<String, Object> getParameters() {
 		return myParameters == null ? null : Collections.unmodifiableMap(myParameters);
 	}
 
@@ -73,7 +69,7 @@ public final class TargetInvocation {
 			if (myParameters.size() == 1 && myParameters.containsKey("")) {
 				sb.append(myParameters.get(""));
 			} else {
-				serializeParameters(myParameters, sb);
+				sb.append(myParameters.toString());
 			}
 		}
 		return sb.toString();
