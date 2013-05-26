@@ -82,19 +82,19 @@ public abstract class AbstractArchiveTarget<T extends Closeable> extends Target 
 
 	@Override
 	public void run() throws ExecutionException {
-		Path destinationPath = myDestinationPath == null ?
+		myDestinationPath = myDestinationPath == null ?
 				Build.getCurrent().getSandboxPath().resolve(getInvocation() + "." + getDefaultFileExtension()) :
 				Build.getCurrent().getBasePath().resolve(myDestinationPath);
 		try {
 			Log.verbose("Clearing the destination path");
-			FilesUtil.deleteFileTree(destinationPath);
+			FilesUtil.deleteFileTree(myDestinationPath);
 			Log.verbose("Creating parent directories");
-			Files.createDirectories(destinationPath.getParent());
+			Files.createDirectories(myDestinationPath.getParent());
 		} catch (IOException e) {
 			throw new ExecutionException("failed to prepare the destination", e);
 		}
 
-		try (T archive = openArchive(destinationPath)) {
+		try (T archive = openArchive(myDestinationPath)) {
 			try {
 				ResourceIterator resourceIterator = mySources.getResourceIterator();
 				Resource resource;
