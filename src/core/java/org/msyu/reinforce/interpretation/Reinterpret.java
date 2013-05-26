@@ -4,6 +4,23 @@ import java.util.List;
 
 public class Reinterpret {
 
+	public static boolean checkInterpretationSpecValidity(Object interpretationSpec) {
+		if (interpretationSpec == null) {
+			return false;
+		} else if (interpretationSpec instanceof String) {
+			return true;
+		} else if (interpretationSpec instanceof List) {
+			for (Object subSpec : ((List) interpretationSpec)) {
+				if (!checkInterpretationSpecValidity(subSpec)) {
+					return false;
+				}
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	public static Object reinterpret(Object object, Object interpretationSpec) throws ReinterpretationException {
 		if (interpretationSpec instanceof String) {
 			return reinterpretString(object, (String) interpretationSpec);
