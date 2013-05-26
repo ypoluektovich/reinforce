@@ -2,9 +2,9 @@ package org.msyu.reinforce.resources;
 
 import org.msyu.reinforce.Build;
 import org.msyu.reinforce.Log;
-import org.msyu.reinforce.ReinterpretationException;
 import org.msyu.reinforce.TargetInvocation;
-import org.msyu.reinforce.util.ReinterpretableUtil;
+import org.msyu.reinforce.interpretation.Reinterpret;
+import org.msyu.reinforce.interpretation.ReinterpretationException;
 import org.msyu.reinforce.util.variables.VariableSubstitutionException;
 import org.msyu.reinforce.util.variables.Variables;
 
@@ -185,7 +185,7 @@ public class CollectionFromMap {
 		List<Object> reinterpretedItems = new ArrayList<>(matchedItems.size());
 		for (Object matchedItem : matchedItems) {
 			try {
-				reinterpretedItems.add(ReinterpretableUtil.reinterpret(matchedItem, interpretationSpec));
+				reinterpretedItems.add(Reinterpret.reinterpret(matchedItem, interpretationSpec));
 			} catch (ReinterpretationException e) {
 				throw new ResourceConstructionException(
 						"error while reinterpreting " + matchedItem + " as " + interpretationSpec,

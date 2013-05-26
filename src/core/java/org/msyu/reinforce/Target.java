@@ -1,5 +1,9 @@
 package org.msyu.reinforce;
 
+import org.msyu.reinforce.interpretation.Reinterpretable;
+import org.msyu.reinforce.interpretation.ReinterpretationException;
+import org.msyu.reinforce.interpretation.UnknownInterpretationException;
+
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -54,6 +58,9 @@ public abstract class Target implements Reinterpretable {
 
 	@Override
 	public Object reinterpret(String interpretationSpec) throws ReinterpretationException {
+		if (DEFAULT_INTERPRETATION_SPEC.equals(interpretationSpec)) {
+			return this;
+		}
 		throw new UnknownInterpretationException(interpretationSpec);
 	}
 

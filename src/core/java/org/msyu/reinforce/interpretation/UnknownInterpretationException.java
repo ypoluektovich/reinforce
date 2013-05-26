@@ -1,4 +1,4 @@
-package org.msyu.reinforce;
+package org.msyu.reinforce.interpretation;
 
 public class UnknownInterpretationException extends ReinterpretationException {
 
