@@ -2,7 +2,7 @@ package org.msyu.reinforce.target.javac;
 
 import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.Log;
-import org.msyu.reinforce.ReinterpretationException;
+import org.msyu.reinforce.interpretation.ReinterpretationException;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
 import org.msyu.reinforce.TargetInvocation;

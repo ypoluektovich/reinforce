@@ -4,10 +4,11 @@ import org.msyu.reinforce.Build;
 import org.msyu.reinforce.BuildException;
 import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.Reinforce;
-import org.msyu.reinforce.ReinterpretationException;
+import org.msyu.reinforce.interpretation.ReinterpretationException;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
 import org.msyu.reinforce.TargetInvocation;
+import org.msyu.reinforce.interpretation.UnknownInterpretationException;
 import org.msyu.reinforce.util.variables.VariableSubstitutionException;
 import org.msyu.reinforce.util.variables.Variables;
 
@@ -224,9 +225,23 @@ public class ReinforceTarget extends Target {
 			if (target != null) {
 				return target;
 			}
-			throw new ReinterpretationException("target '" + targetName + "' has not been executed");
+			throw new UnknownReinforceTargetInterpretationException(targetName);
 		} else {
 			return super.reinterpret(interpretationSpec);
 		}
 	}
+
+	public final class UnknownReinforceTargetInterpretationException extends UnknownInterpretationException {
+
+		private UnknownReinforceTargetInterpretationException(String targetName) {
+			super("target '" + targetName + "' has not been executed by " +
+					ReinforceTarget.this.myBuild.getReinforce());
+		}
+
+		public final ReinforceTarget getReinforceTarget() {
+			return ReinforceTarget.this;
+		}
+
+	}
+
 }
