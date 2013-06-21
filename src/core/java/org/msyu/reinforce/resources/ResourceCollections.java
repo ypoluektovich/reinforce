@@ -1,6 +1,8 @@
 package org.msyu.reinforce.resources;
 
 import org.msyu.reinforce.Log;
+import org.msyu.reinforce.interpretation.Reinterpretable;
+import org.msyu.reinforce.interpretation.ReinterpretationException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,23 +31,54 @@ public class ResourceCollections {
 		return EmptyResourceCollection.INSTANCE;
 	}
 
-	public static ResourceCollection wrapInCollection(List<Object> items) throws ResourceConstructionException {
-		List<ResourceCollection> collections = new ArrayList<>();
-		List<Resource> resources = new ArrayList<>();
-		for (Object item : items) {
-			if (item instanceof ResourceCollection) {
-				Log.debug("Treating %s as a resource collection...", item);
-				collections.add((ResourceCollection) item);
-			} else if (item instanceof Resource) {
-				Log.debug("Treating %s as a single resource (to be wrapped later)...", item);
-				resources.add((Resource) item);
-			} else {
-				throw new ResourceConstructionException("unable to cast or wrap " + item + " as a ResourceCollection");
-			}
+
+	public static ResourceCollection asResourceCollection(Object object) throws ResourceConstructionException {
+		ResourceCollection cow = castOrWrap(object);
+		if (cow != null) {
+			return cow;
 		}
-		if (!resources.isEmpty()) {
-			Log.debug("Wrapping %d resources in a collection...", resources.size());
-			collections.add(new ResourceListCollection(resources));
+		if (object instanceof Reinterpretable) {
+			Log.debug("As a last resort, trying to descend the default interpretation chain of %s", object);
+			do {
+				Object prevObject = object;
+				try {
+					object = ((Reinterpretable) object).reinterpret(Reinterpretable.DEFAULT_INTERPRETATION_SPEC);
+				} catch (ReinterpretationException e) {
+					throw new ResourceConstructionException("error while descending default interpretation chain", e);
+				}
+				if (prevObject == object) {
+					break;
+				}
+				cow = castOrWrap(object);
+				if (cow != null) {
+					return cow;
+				}
+			} while (object instanceof Reinterpretable);
+		}
+		throw new ResourceConstructionException("unable to cast, wrap or interpret " + object + " as a ResourceCollection");
+	}
+
+	private static ResourceCollection castOrWrap(Object object) throws ResourceConstructionException {
+		if (object instanceof ResourceCollection) {
+			Log.debug("%s is a ResourceCollection", object);
+			return (ResourceCollection) object;
+		}
+		if (object instanceof Resource) {
+			ResourceCollection rc = new SingleResourceCollection((Resource) object);
+			Log.debug("%s is a Resource; wrapped in collection %s", object, rc);
+			return rc;
+		}
+		return null;
+	}
+
+	public static ResourceCollection asResourceCollection(List<?> items) throws ResourceConstructionException {
+		if (items.isEmpty()) {
+			Log.debug("Interpreting empty list as empty collection");
+			return EmptyResourceCollection.INSTANCE;
+		}
+		List<ResourceCollection> collections = new ArrayList<>();
+		for (Object item : items) {
+			collections.add(asResourceCollection(item));
 		}
 		if (collections.size() == 1) {
 			Log.debug("Returning a single collection");

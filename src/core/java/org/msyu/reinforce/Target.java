@@ -27,6 +27,11 @@ public abstract class Target implements Reinterpretable {
 		this.myInvocation = invocation;
 	}
 
+	@Override
+	public final String toString() {
+		return getClass().getName() + "{" + myInvocation.getTargetName() + "}";
+	}
+
 	void setDependencyTargets(Set<TargetInvocation> invocations) {
 		myDependencyTargets = new LinkedHashSet<>(invocations);
 	}
