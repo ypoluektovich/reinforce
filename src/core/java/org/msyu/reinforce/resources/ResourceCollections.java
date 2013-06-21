@@ -39,17 +39,21 @@ public class ResourceCollections {
 		}
 		if (object instanceof Reinterpretable) {
 			Log.debug("As a last resort, trying to descend the default interpretation chain of %s", object);
-			try {
-				do {
+			do {
+				Object prevObject = object;
+				try {
 					object = ((Reinterpretable) object).reinterpret(Reinterpretable.DEFAULT_INTERPRETATION_SPEC);
-					cow = castOrWrap(object);
-					if (cow != null) {
-						return cow;
-					}
-				} while (object instanceof Reinterpretable);
-			} catch (ReinterpretationException e) {
-				throw new ResourceConstructionException("error while descending default interpretation chain", e);
-			}
+				} catch (ReinterpretationException e) {
+					throw new ResourceConstructionException("error while descending default interpretation chain", e);
+				}
+				if (prevObject == object) {
+					break;
+				}
+				cow = castOrWrap(object);
+				if (cow != null) {
+					return cow;
+				}
+			} while (object instanceof Reinterpretable);
 		}
 		throw new ResourceConstructionException("unable to cast, wrap or interpret " + object + " as a ResourceCollection");
 	}
