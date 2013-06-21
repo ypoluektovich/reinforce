@@ -76,7 +76,7 @@ public class CollectionFromMap {
 			matchedItems = reinterpret(matchedItems, defMap.get("as"));
 		}
 
-		return ResourceCollections.wrapInCollection(matchedItems);
+		return ResourceCollections.asResourceCollection(matchedItems);
 	}
 
 	private static List<Object> matchTargets(Object targetObject, Map defMap) throws ResourceConstructionException {
