@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 
 public final class TargetInvocation {
 
-	private static final Pattern TARGET_SPEC_PATTERN = Pattern.compile("^([-\\w]++)(?:@(.++))?$");
+	private static final Pattern TARGET_SPEC_PATTERN = Pattern.compile("^([-\\w]++)(?:@(.*+))?$");
 
 	public static List<TargetInvocation> parse(Iterable<String> targetSpecs) {
 		List<TargetInvocation> invocations = new ArrayList<>();
