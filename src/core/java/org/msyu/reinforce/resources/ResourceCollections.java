@@ -5,6 +5,7 @@ import org.msyu.reinforce.interpretation.Reinterpretable;
 import org.msyu.reinforce.interpretation.ReinterpretationException;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,9 @@ public class ResourceCollections {
 
 
 	public static ResourceCollection asResourceCollection(Object object) throws ResourceConstructionException {
+		if (object instanceof Collection) {
+			return asResourceCollection((Collection) object);
+		}
 		ResourceCollection cow = castOrWrap(object);
 		if (cow != null) {
 			return cow;
@@ -59,6 +63,7 @@ public class ResourceCollections {
 	}
 
 	private static ResourceCollection castOrWrap(Object object) throws ResourceConstructionException {
+		Log.debug("Trying to cast %s to a resource or collection...", object);
 		if (object instanceof ResourceCollection) {
 			Log.debug("%s is a ResourceCollection", object);
 			return (ResourceCollection) object;
@@ -71,9 +76,10 @@ public class ResourceCollections {
 		return null;
 	}
 
-	public static ResourceCollection asResourceCollection(List<?> items) throws ResourceConstructionException {
+	public static ResourceCollection asResourceCollection(Collection<?> items) throws ResourceConstructionException {
+		Log.debug("Casting a POJO collection to a resource collection...");
 		if (items.isEmpty()) {
-			Log.debug("Interpreting empty list as empty collection");
+			Log.debug("Casting empty list to empty collection");
 			return EmptyResourceCollection.INSTANCE;
 		}
 		List<ResourceCollection> collections = new ArrayList<>();

@@ -181,7 +181,7 @@ public class CollectionFromMap {
 	}
 
 	private static List<Object> reinterpret(List<Object> matchedItems, Object interpretationSpec) throws ResourceConstructionException {
-		Log.debug("Reinterpreting items...");
+		Log.debug("Reinterpreting items (as %s)...", interpretationSpec);
 		List<Object> reinterpretedItems = new ArrayList<>(matchedItems.size());
 		for (Object matchedItem : matchedItems) {
 			try {
