@@ -1,6 +1,6 @@
 # Maintainer: Yanus Poluektovich <ypoiluektovich@gmail.com>
 pkgname=reinforce
-pkgver=0.1.3
+pkgver=0.1.4
 pkgrel=1
 pkgdesc="A build tool for java"
 arch=('any')
@@ -14,7 +14,7 @@ source=(
     "rein"
     )
 noextract=()
-sha512sums=('61e033a221f505d5f40829137f6d94062610dbcbed11acc2764da9dd0765c756e03cdaf5519a95b80fdbe4b60c3d4caacf3ab4ab69ccb68cebfb349e2341da4a'
+sha512sums=('b1c415e5bf8ef0909bfb26bb06c45105b67f6dc2db56c7feca0ed283ad6beb61dc155adb959ada777781f0814393bab872deed0cf486965d15f306cd5f964102'
             'e1410bae91d04b0a0f194655a542e42f34ee8cebf6b0bb8606a9ed54523183aef6d436471d7445de34c93082d057f15409f87c18a8b2ea4cd511a10590779748'
             '283a4cc25cdaaf0047132ff426765f539d356f8f03068972b8375e231169c5f3cd7015ca2934e4bf1b1fde1359b84173289eeda54bd6179804dd5412116ab8d0'
             '00ced3b684efeeeba491e7aca41ade3a4ee050ae1d6a744404388e713796a277e5a5a19dfccab43a62e526bf21c2c43a49af7f04ada7fbb94d5447a0ab661825')
