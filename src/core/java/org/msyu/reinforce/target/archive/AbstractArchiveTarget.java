@@ -68,9 +68,13 @@ public abstract class AbstractArchiveTarget<T extends Closeable> extends Target 
 		}
 		String expandedDestination;
 		try {
-			expandedDestination = Variables.expand((String) destinationObject);
+			Object expandedObject = Variables.expand((String) destinationObject);
+			if (!(expandedObject instanceof String)) {
+				throw new TargetInitializationException("destination was variable-expanded to a non-string");
+			}
+			expandedDestination = (String) expandedObject;
 		} catch (VariableSubstitutionException e) {
-			throw new TargetInitializationException("error while expanding variables in '" + DESTINATION_KEY + "' setting", e);
+			throw new TargetInitializationException("error while expanding variables in destination setting", e);
 		}
 		myDestinationPath = Paths.get(expandedDestination);
 	}

@@ -50,13 +50,13 @@ public class Reinforce {
 	public Build executeNewBuild(
 			Path basePath,
 			Path sandboxPath,
-			Map<String, String> variables,
+			Map<String, Object> variables,
 			Map<TargetInvocation, Target> inheritedTargets,
 			Iterable<TargetInvocation> targetInvocations
 	) throws BuildException {
 		Build build = new Build(this, basePath.toAbsolutePath().normalize(), sandboxPath);
 		if (variables != null) {
-			for (Map.Entry<String, String> variable : variables.entrySet()) {
+			for (Map.Entry<String, Object> variable : variables.entrySet()) {
 				build.setVariable(variable.getKey(), variable.getValue());
 			}
 		}

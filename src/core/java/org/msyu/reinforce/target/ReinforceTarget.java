@@ -15,6 +15,7 @@ import org.msyu.reinforce.util.variables.Variables;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 public class ReinforceTarget extends Target {
 
@@ -38,7 +40,7 @@ public class ReinforceTarget extends Target {
 
 	public static final String INHERIT_TARGETS_KEY = "inherit targets";
 
-	public static final Pattern RESULT_OF_TARGET_PATTERN = Pattern.compile("^result of (.++)$");
+	public static final Pattern RESULT_OF_TARGET_PATTERN = Pattern.compile("^result of( all by regex)? (.++)$");
 
 	private Path myTargetDefLocation;
 
@@ -46,7 +48,7 @@ public class ReinforceTarget extends Target {
 
 	private Path mySandboxPath;
 
-	private Map<String, String> myVariables;
+	private Map<String, Object> myVariables;
 
 	private Map<TargetInvocation, Target> myInheritedTargets;
 
@@ -102,29 +104,50 @@ public class ReinforceTarget extends Target {
 		myVariables = new HashMap<>();
 		Object variableDefs = docMap.get(VARIABLES_KEY);
 		if (!(variableDefs instanceof Map)) {
-			throw newVariableInitializationException();
+			throw new TargetInitializationException("variable definitions must be specified as a name-value mapping");
 		}
 		for (Map.Entry<?, ?> variable : ((Map<?, ?>) variableDefs).entrySet()) {
-			if (variable.getKey() instanceof String && variable.getValue() instanceof String) {
-				try {
-					myVariables.put(
-							Variables.expand((String) variable.getKey()),
-							Variables.expand((String) variable.getValue())
-					);
-				} catch (VariableSubstitutionException e) {
-					throw new TargetInitializationException(
-							"error while expanding variables in '" + VARIABLES_KEY + "' setting",
-							e
-					);
-				}
-			} else {
-				throw newVariableInitializationException();
-			}
+			myVariables.put(getVariableName(variable), getVariableValue(variable));
 		}
 	}
 
-	private TargetInitializationException newVariableInitializationException() {
-		return new TargetInitializationException("variable definitions must be specified as a string-string mapping");
+	private static String getVariableName(Map.Entry<?, ?> variableDefEntry) throws TargetInitializationException {
+		Object unexpandedNameObject = variableDefEntry.getKey();
+		if (!(unexpandedNameObject instanceof String)) {
+			throw new TargetInitializationException("new variable names must be specified as strings");
+		}
+		String unexpandedNameString = (String) unexpandedNameObject;
+		Object expandedNameObject;
+		try {
+			expandedNameObject = Variables.expand(unexpandedNameString);
+		} catch (VariableSubstitutionException e) {
+			throw new TargetInitializationException(
+					"error while expanding variables in new variable name definition '" + unexpandedNameString + "'",
+					e
+			);
+		}
+		if (!(expandedNameObject instanceof String)) {
+			throw new TargetInitializationException("new variable names must be strings after variable expansion");
+		}
+		return (String) expandedNameObject;
+	}
+
+	private static Object getVariableValue(Map.Entry<?, ?> variable) throws TargetInitializationException {
+		Object unexpandedValueObject = variable.getValue();
+		if (!(unexpandedValueObject instanceof String)) {
+			throw new TargetInitializationException("new variable values must be specified as strings");
+		}
+		String unexpandedValueString = (String) unexpandedValueObject;
+		Object value;
+		try {
+			value = Variables.expand(unexpandedValueString);
+		} catch (VariableSubstitutionException e) {
+			throw new TargetInitializationException(
+					"error while expanding variables in new variable value definition '" + unexpandedValueString + "'",
+					e
+			);
+		}
+		return value;
 	}
 
 
@@ -151,7 +174,11 @@ public class ReinforceTarget extends Target {
 		}
 		String expandedTargetDef;
 		try {
-			expandedTargetDef = Variables.expand((String) inheritedTargetDef);
+			Object expandedTargetDefObject = Variables.expand((String) inheritedTargetDef);
+			if (!(expandedTargetDefObject instanceof String)) {
+				throw new TargetInitializationException("inherited target was variable-expanded to a non-string");
+			}
+			expandedTargetDef = (String) expandedTargetDefObject;
 		} catch (VariableSubstitutionException e) {
 			throw new TargetInitializationException("error while expanding variables in inherited target spec", e);
 		}
@@ -181,7 +208,11 @@ public class ReinforceTarget extends Target {
 		}
 		String expandedTargetSpec;
 		try {
-			expandedTargetSpec = Variables.expand((String) targetSpec);
+			Object expandedTargetSpecObject = Variables.expand((String) targetSpec);
+			if (!(expandedTargetSpecObject instanceof String)) {
+				throw new TargetInitializationException("target invocation was variable-expanded to a non-string");
+			}
+			expandedTargetSpec = (String) expandedTargetSpecObject;
 		} catch (VariableSubstitutionException e) {
 			throw new TargetInitializationException("error while expanding variables in target invocation spec in position " + index);
 		}
@@ -220,22 +251,51 @@ public class ReinforceTarget extends Target {
 	public Object reinterpret(String interpretationSpec) throws ReinterpretationException {
 		Matcher matcher = RESULT_OF_TARGET_PATTERN.matcher(interpretationSpec);
 		if (matcher.matches()) {
-			String targetName = matcher.group(1);
-			Target target = myBuild.getExecutedTarget(TargetInvocation.parse(targetName));
-			if (target != null) {
-				return target;
+			boolean simpleMatch = matcher.group(1) == null;
+			String targetName = matcher.group(2);
+			if (simpleMatch) {
+				Target target = myBuild.getExecutedTarget(TargetInvocation.parse(targetName));
+				if (target != null) {
+					return target;
+				}
+				throw new UnknownTargetInterpretationException(simpleMatch, targetName);
+			} else {
+				Pattern targetNamePattern;
+				try {
+					targetNamePattern = Pattern.compile(targetName);
+				} catch (PatternSyntaxException e) {
+					throw new InvalidRegexInterpretationException(targetName);
+				}
+				List<Target> targets = new ArrayList<>();
+				for (TargetInvocation invocation : myBuild.getExecutedTargets()) {
+					if (targetNamePattern.matcher(invocation.toString()).matches()) {
+						targets.add(myBuild.getExecutedTarget(invocation));
+					}
+				}
+				return targets;
 			}
-			throw new UnknownReinforceTargetInterpretationException(targetName);
 		} else {
 			return super.reinterpret(interpretationSpec);
 		}
 	}
 
-	public final class UnknownReinforceTargetInterpretationException extends UnknownInterpretationException {
+	public final class InvalidRegexInterpretationException extends UnknownInterpretationException {
 
-		private UnknownReinforceTargetInterpretationException(String targetName) {
-			super("target '" + targetName + "' has not been executed by " +
-					ReinforceTarget.this.myBuild.getReinforce());
+		private InvalidRegexInterpretationException(String targetNameRegex) {
+			super("invalid target name regex: " + targetNameRegex);
+		}
+
+	}
+
+	public final class UnknownTargetInterpretationException extends UnknownInterpretationException {
+
+		private UnknownTargetInterpretationException(boolean simpleMatch, String targetName) {
+			super(
+					(simpleMatch ?
+							("target '" + targetName + "' has not") :
+							("no target that matches '" + targetName + "' has")
+					) +
+					" been executed by " + ReinforceTarget.this.myBuild.getReinforce());
 		}
 
 		public final ReinforceTarget getReinforceTarget() {

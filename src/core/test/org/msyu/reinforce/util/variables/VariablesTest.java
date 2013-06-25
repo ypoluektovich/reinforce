@@ -12,7 +12,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class VariablesTest {
 
-	private static final Map<String, String> VARIABLES = new HashMap<>();
+	private static final Map<String, Object> VARIABLES = new HashMap<>();
 
 	static {
 		VARIABLES.put("module.name", "core");

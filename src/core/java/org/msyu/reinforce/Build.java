@@ -26,7 +26,7 @@ public class Build {
 
 	private final Path mySandboxPath;
 
-	private final Map<String, String> myVariables = new HashMap<>();
+	private final Map<String, Object> myVariables = new HashMap<>();
 
 	private final Set<TargetInvocation> myRequestedTargets = new HashSet<>();
 
@@ -42,8 +42,11 @@ public class Build {
 		}
 		Log.verbose("Build base path is %s", basePath);
 		this.myBasePath = basePath;
+		setVariable("build.basePath", myBasePath);
+
 		Log.verbose("Build sandbox path is %s", sandboxPath);
 		this.mySandboxPath = basePath.resolve(sandboxPath);
+		setVariable("build.sandboxPath", mySandboxPath);
 	}
 
 	public Reinforce getReinforce() {
@@ -71,7 +74,7 @@ public class Build {
 				);
 	}
 
-	public void setVariable(String name, String value) throws VariableOverwriteException {
+	public void setVariable(String name, Object value) throws VariableOverwriteException {
 		if (myVariables.containsKey(name)) {
 			throw new VariableOverwriteException(name);
 		}

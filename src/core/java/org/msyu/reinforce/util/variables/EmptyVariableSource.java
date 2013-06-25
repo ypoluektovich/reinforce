@@ -10,7 +10,7 @@ final class EmptyVariableSource implements VariableSource {
 	}
 
 	@Override
-	public final String getValueOf(String variableName) throws UndefinedVariableException {
+	public final Object getValueOf(String variableName) throws UndefinedVariableException {
 		throw new UndefinedVariableException(variableName);
 	}
 

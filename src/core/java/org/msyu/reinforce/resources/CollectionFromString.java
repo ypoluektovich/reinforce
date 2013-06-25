@@ -20,11 +20,20 @@ public class CollectionFromString {
 
 	public static ResourceCollection interpret(String defString) throws ResourceConstructionException {
 		Log.debug("Interpreting a string: '%s'...", defString);
+		Object expandedDef;
 		try {
-			defString = Variables.expand(defString);
+			expandedDef = Variables.expand(defString);
 		} catch (VariableSubstitutionException e) {
 			throw new ResourceConstructionException("error while expanding variables in string: " + defString, e);
 		}
+		if (expandedDef instanceof String) {
+			return interpretExpanded((String) expandedDef);
+		} else {
+			return ResourceCollections.interpret(expandedDef);
+		}
+	}
+
+	private static ResourceCollection interpretExpanded(String defString) throws ResourceConstructionException {
 		Log.debug("String after variable expansion: '%s'...", defString);
 		TargetInvocation invocation = TargetInvocation.parse(defString);
 		if (invocation != null) {
