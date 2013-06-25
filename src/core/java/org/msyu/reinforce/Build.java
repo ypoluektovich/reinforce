@@ -42,8 +42,11 @@ public class Build {
 		}
 		Log.verbose("Build base path is %s", basePath);
 		this.myBasePath = basePath;
+		setVariable("build.basePath", myBasePath);
+
 		Log.verbose("Build sandbox path is %s", sandboxPath);
 		this.mySandboxPath = basePath.resolve(sandboxPath);
+		setVariable("build.sandboxPath", mySandboxPath);
 	}
 
 	public Reinforce getReinforce() {
