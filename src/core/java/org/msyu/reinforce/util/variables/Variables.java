@@ -110,27 +110,31 @@ public class Variables {
 
 		private StringBuilder stringResult = null;
 
-		public final void writeChar(int c) throws ConcatException {
-			if (nonStringResult != null) {
-				throw new ConcatException(false, true);
-			}
+		public final void writeChar(int c) {
+			collapseNonStringResult();
 			getStringBuilder().append((char) c);
 		}
 
-		public final void writeObject(Object o) throws ConcatException {
+		public final void writeObject(Object o) {
 			if (o instanceof String) {
-				if (nonStringResult != null) {
-					throw new ConcatException(false, true);
-				}
+				collapseNonStringResult();
 				getStringBuilder().append((String) o);
 			} else {
-				if (stringResult != null) {
-					throw new ConcatException(true, false);
+				if (stringResult == null) {
+					collapseNonStringResult();
 				}
-				if (nonStringResult != null) {
-					throw new ConcatException(false, false);
+				if (stringResult == null) {
+					nonStringResult = o;
+				} else {
+					stringResult.append(String.valueOf(o));
 				}
-				nonStringResult = o;
+			}
+		}
+
+		private void collapseNonStringResult() {
+			if (nonStringResult != null) {
+				getStringBuilder().append(String.valueOf(nonStringResult));
+				nonStringResult = null;
 			}
 		}
 
