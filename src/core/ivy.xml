@@ -12,6 +12,9 @@
     <dependencies>
         <dependency org="org.yaml" name="snakeyaml" rev="1.11" conf="default,sources->@"/>
         <dependency org="junit" name="junit" rev="4.11" conf="test->default;sources->sources"/>
+        <dependency org="org.apache.commons" name="commons-compress" rev="1.5" conf="default,sources->@"/>
+
+        <exclude org="org.tukaani" module="xz"/>
     </dependencies>
 
 </ivy-module>

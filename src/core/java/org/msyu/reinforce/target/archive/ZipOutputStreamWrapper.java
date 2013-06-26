@@ -45,15 +45,16 @@ public class ZipOutputStreamWrapper implements Closeable {
 				throw new DuplicateEntryException("cannot overwrite packed file: " + zipPath);
 			}
 			// if duplicate dir, just silently continue
-		} else {
-			Log.debug("Adding entry: %s", zipPath);
-			myZipOutputStream.putNextEntry(new ZipEntry(zipPath));
-			if (entryIsFile) {
-				Files.copy(Build.getCurrent().getBasePath().resolve(resource.getPath()), myZipOutputStream);
-			}
-			myZipOutputStream.closeEntry();
-			myAddedEntries.add(zipPath);
+			return;
 		}
+
+		Log.debug("Adding entry: %s", zipPath);
+		myZipOutputStream.putNextEntry(new ZipEntry(zipPath));
+		if (entryIsFile) {
+			Files.copy(Build.getCurrent().getBasePath().resolve(resource.getPath()), myZipOutputStream);
+		}
+		myZipOutputStream.closeEntry();
+		myAddedEntries.add(zipPath);
 	}
 
 	@Override
