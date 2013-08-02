@@ -1,0 +1,14 @@
+#!/bin/bash
+
+_rein() {
+    local cur targets
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    targets=$(
+    	find -L reinforce -mindepth 1 -maxdepth 1 -type f -name "*.yaml" -printf "%P\n" 2>/dev/null |
+    	sed 's/.yaml$//'
+    )
+    COMPREPLY=( $(compgen -W "${targets}" -- ${cur}) )
+}
+
+complete -F _rein rein

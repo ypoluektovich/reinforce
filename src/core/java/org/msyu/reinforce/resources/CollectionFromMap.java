@@ -39,19 +39,13 @@ public class CollectionFromMap {
 
 	private static ResourceCollection interpretBase(Map defMap) throws ResourceConstructionException {
 		Log.debug("Interpreting base collection from map...");
-		Object targetObject = defMap.containsKey("target") ? defMap.get("target") : null;
-		Object locationObject = defMap.containsKey("location") ? defMap.get("location") : null;
-		if ((targetObject == null) == (locationObject == null)) {
-			throw new ResourceConstructionException(
-					"must specify either target or location in a resource collection map-definition");
-		}
 
-		List<Object> matchedItems;
-		if (targetObject != null) {
-			matchedItems = matchTargets(targetObject, defMap);
-		} else /* locationObject != null */ {
-			matchedItems = matchLocations(locationObject);
-		}
+		BaseCollectionMatcher baseCollectionMatcher = null;
+		baseCollectionMatcher = buildMatcherOrDie(defMap, TargetMatcher.Factory.INSTANCE, baseCollectionMatcher);
+		baseCollectionMatcher = buildMatcherOrDie(defMap, LocationMatcher.Factory.INSTANCE, baseCollectionMatcher);
+		baseCollectionMatcher = buildMatcherOrDie(defMap, UnionMatcher.Factory.INSTANCE, baseCollectionMatcher);
+
+		List<Object> matchedItems = baseCollectionMatcher.match();
 		Log.debug("Matched %d items...", matchedItems.size());
 
 		if (matchedItems.isEmpty()) {
@@ -79,37 +73,100 @@ public class CollectionFromMap {
 		return ResourceCollections.asResourceCollection(matchedItems);
 	}
 
-	private static List<Object> matchTargets(Object targetObject, Map defMap) throws ResourceConstructionException {
-		Log.debug("Matching targets...");
-		if (!(targetObject instanceof String)) {
-			throw new ResourceConstructionException("target must be referenced by its name string");
+	private static abstract class BaseCollectionMatcher {
+
+		protected final String myType;
+
+		protected BaseCollectionMatcher(String type) {
+			myType = type;
 		}
 
-		StringMatcher matcher;
-		if (defMap.containsKey("match")) {
-			Object matchSetting = defMap.get("match");
-			if ("exact".equals(matchSetting)) {
-				matcher = new EqualsMatcher((String) targetObject);
-			} else if ("regex".equals(matchSetting)) {
-				matcher = new RegexMatcher((String) targetObject);
-			} else {
-				throw new ResourceConstructionException("unsupported target match setting: " + matchSetting);
-			}
-		} else {
-			matcher = new EqualsMatcher((String) targetObject);
+		protected abstract List<Object> match() throws ResourceConstructionException;
+
+	}
+
+	private static BaseCollectionMatcher buildMatcherOrDie(
+			Map defMap,
+			BaseCollectionMatcherFactory<?> factory,
+			BaseCollectionMatcher previousMatcher
+	) throws ResourceConstructionException {
+		if (!defMap.containsKey(factory.myType)) {
+			return previousMatcher;
+		}
+		if (previousMatcher != null) {
+			throw new ResourceConstructionException(
+					"ambiguous type of map-defined resource collection: " +
+							previousMatcher.myType + " or " + factory.myType
+			);
+		}
+		return factory.build(defMap.get(factory.myType), defMap);
+	}
+
+	private static abstract class BaseCollectionMatcherFactory<M extends BaseCollectionMatcher> {
+
+		protected final String myType;
+
+		protected BaseCollectionMatcherFactory(String type) {
+			myType = type;
 		}
 
-		List<Object> matchedTargets = new ArrayList<>();
-		Log.debug("Matching target names with %s", matcher);
-		for (TargetInvocation executedInvocation : Build.getCurrent().getExecutedTargets()) {
-			if (matcher.fits(executedInvocation.getTargetName())) {
-				Log.debug("%s fits", executedInvocation);
-				matchedTargets.add(Build.getCurrent().getExecutedTarget(executedInvocation));
+		protected abstract M build(Object setting, Map defMap) throws ResourceConstructionException;
+
+	}
+
+	private static class TargetMatcher extends BaseCollectionMatcher {
+
+		private final StringMatcher myStringMatcher;
+
+		protected static class Factory extends BaseCollectionMatcherFactory<TargetMatcher> {
+
+			protected static final Factory INSTANCE = new Factory();
+
+			private Factory() {
+				super("target");
+			}
+
+			@Override
+			protected TargetMatcher build(Object setting, Map defMap) throws ResourceConstructionException {
+				return new TargetMatcher(setting, defMap);
+			}
+
+		}
+
+		protected TargetMatcher(Object targetObject, Map defMap) throws ResourceConstructionException {
+			super(Factory.INSTANCE.myType);
+			if (!(targetObject instanceof String)) {
+				throw new ResourceConstructionException("target must be referenced by its name string");
+			}
+			if (defMap.containsKey("match")) {
+				Object matchSetting = defMap.get("match");
+				if ("exact".equals(matchSetting)) {
+					myStringMatcher = new EqualsMatcher((String) targetObject);
+				} else if ("regex".equals(matchSetting)) {
+					myStringMatcher = new RegexMatcher((String) targetObject);
+				} else {
+					throw new ResourceConstructionException("unsupported target match setting: " + matchSetting);
+				}
 			} else {
-				Log.debug("%s does not fit", executedInvocation);
+				myStringMatcher = new EqualsMatcher((String) targetObject);
 			}
 		}
-		return matchedTargets;
+
+		@Override
+		protected List<Object> match() {
+			Log.debug("Matching target names with %s...", myStringMatcher);
+			List<Object> matchedTargets = new ArrayList<>();
+			for (TargetInvocation executedInvocation : Build.getCurrent().getExecutedTargets()) {
+				if (myStringMatcher.fits(executedInvocation.getTargetName())) {
+					Log.debug("%s fits", executedInvocation);
+					matchedTargets.add(Build.getCurrent().getExecutedTarget(executedInvocation));
+				} else {
+					Log.debug("%s does not fit", executedInvocation);
+				}
+			}
+			return matchedTargets;
+		}
+
 	}
 
 	private static interface StringMatcher {
@@ -157,31 +214,95 @@ public class CollectionFromMap {
 		}
 	}
 
-	private static List<Object> matchLocations(Object locationSetting) throws ResourceConstructionException {
-		Log.debug("Interpreting location as base collection...");
-		if (!(locationSetting instanceof String)) {
-			throw new ResourceConstructionException("location must be a string (a path in file system)");
+	private static class LocationMatcher extends BaseCollectionMatcher {
+
+		protected static class Factory extends BaseCollectionMatcherFactory<LocationMatcher> {
+
+			protected static final Factory INSTANCE = new Factory();
+
+			private Factory() {
+				super("location");
+			}
+
+			@Override
+			protected LocationMatcher build(Object setting, Map defMap) throws ResourceConstructionException {
+				return new LocationMatcher(setting, defMap);
+			}
+
 		}
-		String locationString;
-		try {
-			Object expandedLocation = Variables.expand((String) locationSetting);
+
+		private final String myLocationString;
+
+		protected LocationMatcher(Object locationSetting, Map defMap) throws ResourceConstructionException {
+			super(Factory.INSTANCE.myType);
+			if (!(locationSetting instanceof String)) {
+				throw new ResourceConstructionException("location must be a string (a path in file system)");
+			}
+			Object expandedLocation;
+			try {
+				expandedLocation = Variables.expand((String) locationSetting);
+			} catch (VariableSubstitutionException e) {
+				throw new ResourceConstructionException("error while expanding variables in location setting", e);
+			}
 			if (!(expandedLocation instanceof String)) {
 				throw new ResourceConstructionException("location string was variable-expanded to a non-string");
 			}
-			locationString = (String) expandedLocation;
-		} catch (VariableSubstitutionException e) {
-			throw new ResourceConstructionException("error while expanding variables in location setting", e);
+			myLocationString = (String) expandedLocation;
 		}
-		List<Object> matchedItems = new ArrayList<>();
-		ResourceCollection collection = CollectionFromString.interpretLocation(locationString);
-		try {
-			if (!collection.isEmpty()) {
-				matchedItems.add(collection);
+
+		@Override
+		protected List<Object> match() throws ResourceConstructionException {
+			Log.debug("Interpreting location as base collection...");
+			List<Object> matchedItems = new ArrayList<>();
+			ResourceCollection collection = CollectionFromString.interpretLocation(myLocationString);
+			try {
+				if (!collection.isEmpty()) {
+					matchedItems.add(collection);
+				}
+			} catch (ResourceEnumerationException e) {
+				throw new ResourceConstructionException("couldn't check collection emptiness", e);
 			}
-		} catch (ResourceEnumerationException e) {
-			throw new ResourceConstructionException("couldn't check collection emptiness", e);
+			return matchedItems;
 		}
-		return matchedItems;
+
+	}
+
+	private static class UnionMatcher extends BaseCollectionMatcher {
+
+		protected static class Factory extends BaseCollectionMatcherFactory<UnionMatcher> {
+
+			protected static final Factory INSTANCE = new Factory();
+
+			private Factory() {
+				super("union");
+			}
+
+			@Override
+			protected UnionMatcher build(Object setting, Map defMap) throws ResourceConstructionException {
+				return new UnionMatcher(setting);
+			}
+		}
+
+		private final List myElementDefinitions;
+
+		protected UnionMatcher(Object unionSetting) throws ResourceConstructionException {
+			super(Factory.INSTANCE.myType);
+			if (!(unionSetting instanceof List)) {
+				throw new ResourceConstructionException("union resource collection must be a defined by a list");
+			}
+			myElementDefinitions = (List) unionSetting;
+		}
+
+		@Override
+		protected List<Object> match() throws ResourceConstructionException {
+			Log.debug("Interpreting union as base collection...");
+			List<Object> matchedItems = new ArrayList<>();
+			for (Object elementDefinition : myElementDefinitions) {
+				matchedItems.add(ResourceCollections.interpret(elementDefinition));
+			}
+			return matchedItems;
+		}
+
 	}
 
 	private static List<Object> reinterpret(List<Object> matchedItems, Object interpretationSpec) throws ResourceConstructionException {
