@@ -1,4 +1,4 @@
-package org.msyu.reinforce.target.junit;
+package org.msyu.reinforce.target.testing.junit;
 
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetFactory;

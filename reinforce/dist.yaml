@@ -1,4 +1,4 @@
-depends on: [ build_core, build_ivy, build_junit ]
+depends on: [ build_core, build_ivy, build_testing ]
 type: jar
 source:
   - target: ^build_

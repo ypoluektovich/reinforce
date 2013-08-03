@@ -1,4 +1,4 @@
-package org.msyu.reinforce.target.junit;
+package org.msyu.reinforce.target.testing.junit;
 
 public class JUnitRunnerException extends Exception {
 

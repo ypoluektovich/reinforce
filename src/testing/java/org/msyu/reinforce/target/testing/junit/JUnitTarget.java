@@ -1,4 +1,4 @@
-package org.msyu.reinforce.target.junit;
+package org.msyu.reinforce.target.testing.junit;
 
 import org.hamcrest.Matcher;
 import org.junit.runner.JUnitCore;
