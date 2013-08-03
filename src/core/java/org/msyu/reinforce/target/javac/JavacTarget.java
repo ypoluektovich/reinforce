@@ -16,6 +16,7 @@ import org.msyu.reinforce.resources.ResourceCollection;
 import org.msyu.reinforce.resources.ResourceCollections;
 import org.msyu.reinforce.resources.ResourceEnumerationException;
 import org.msyu.reinforce.resources.ResourceIterator;
+import org.msyu.reinforce.target.ActionOnEmptySource;
 
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -34,23 +35,6 @@ public class JavacTarget extends Target implements ResourceCollection {
 	public static final String SOURCE_KEY = "source";
 
 	public static final String ON_EMPTY_SOURCE_KEY = "on empty source";
-
-	public static enum ActionOnEmptySource {
-
-		DIE("die"), WARN("warn"), SKIP("skip");
-
-		private final String mySetting;
-
-		private ActionOnEmptySource(String setting) {
-			mySetting = setting;
-		}
-
-		@Override
-		public String toString() {
-			return mySetting;
-		}
-
-	}
 
 	public static final String EMPTY_SOURCE_MESSAGE = "No source files found to compile; result will be empty too";
 
@@ -93,19 +77,7 @@ public class JavacTarget extends Target implements ResourceCollection {
 				new RegexResourceFilter("\\.java$")
 		);
 
-		if (docMap.containsKey(ON_EMPTY_SOURCE_KEY)) {
-			Object setting = docMap.get(ON_EMPTY_SOURCE_KEY);
-			for (ActionOnEmptySource action : ActionOnEmptySource.values()) {
-				if (action.toString().equals(setting)) {
-					myActionOnEmptySource = action;
-				}
-			}
-			if (myActionOnEmptySource == null) {
-				throw new TargetInitializationException("unsupported value of '" + ON_EMPTY_SOURCE_KEY + "'");
-			}
-		} else {
-			myActionOnEmptySource = ActionOnEmptySource.DIE;
-		}
+		myActionOnEmptySource = ActionOnEmptySource.parse(docMap, ON_EMPTY_SOURCE_KEY);
 	}
 
 	private ResourceCollection prepareClasspath(Map docMap) throws TargetInitializationException {
