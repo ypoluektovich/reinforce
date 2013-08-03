@@ -1,15 +1,13 @@
 package org.msyu.reinforce.target;
 
-import org.msyu.reinforce.Build;
 import org.msyu.reinforce.ExecutionException;
-import org.msyu.reinforce.Log;
 import org.msyu.reinforce.Target;
 import org.msyu.reinforce.TargetInitializationException;
 import org.msyu.reinforce.TargetInvocation;
+import org.msyu.reinforce.util.ExecUtil;
 import org.msyu.reinforce.util.variables.VariableSubstitutionException;
 import org.msyu.reinforce.util.variables.Variables;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -62,25 +60,7 @@ public class ExecTarget extends Target {
 
 	@Override
 	public void run() throws ExecutionException {
-		Log.verbose("Running external command...");
-		int exitCode;
-		try {
-			Process process = new ProcessBuilder(myCommand)
-					.directory(Build.getCurrent().getBasePath().toFile())
-					.inheritIO()
-					.start();
-			while (true) {
-				try {
-					exitCode = process.waitFor();
-					break;
-				} catch (InterruptedException e) {
-					Log.debug("The thread waiting for the external compiler got interrupted. Ignoring...");
-				}
-			}
-		} catch (IOException e) {
-			throw new ExecutionException("exception during external compiler invocation", e);
-		}
-		Log.verbose("Process exited with code %d", exitCode);
+		int exitCode = ExecUtil.execute(myCommand);
 		if (exitCode != 0) {
 			throw new ExecutionException("external process exited with non-zero code: " + exitCode);
 		}
