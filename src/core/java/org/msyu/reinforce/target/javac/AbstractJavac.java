@@ -9,6 +9,7 @@ import org.msyu.reinforce.resources.ResourceCollection;
 import org.msyu.reinforce.resources.ResourceEnumerationException;
 import org.msyu.reinforce.resources.ResourceIterator;
 import org.msyu.reinforce.util.FilesUtil;
+import org.msyu.reinforce.util.JavaClasspath;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -72,33 +73,18 @@ public abstract class AbstractJavac implements JavaCompiler {
 			writer.write(destinationDir.toString());
 			writer.newLine();
 
-			if (classpath == null) {
-				Log.debug("No classpath");
-			} else {
-				Log.debug("Enumerating classpath entries...");
-				try {
-					ResourceIterator cpIterator = classpath.getResourceIterator();
-					Resource cpElement = cpIterator.next();
-					if (cpElement == null) {
-						Log.debug("Classpath is empty, skipping", destinationDir);
-					} else {
-						Path cpElementPath = Build.getCurrent().getBasePath().resolve(cpElement.getPath());
-						Log.debug("First classpath entry: %s", cpElementPath);
-						writer.write("-classpath ");
-						writer.write(cpElementPath.toString());
-						while ((cpElement = cpIterator.next()) != null) {
-							cpElementPath = Build.getCurrent().getBasePath().resolve(cpElement.getPath());
-							Log.debug("Next classpath entry: %s", cpElementPath);
-							writer.write(":");
-							writer.write(cpElementPath.toString());
-						}
-						writer.newLine();
-						Log.debug("Classpath enumerated");
-					}
-				} catch (ResourceEnumerationException e) {
-					throw new ExecutionException("error while enumerating classpath entries", e);
-				}
+			try {
+				JavaClasspath.fromResourceCollection(
+						classpath,
+						writer,
+						"-classpath ",
+						System.getProperty("path.separator"),
+						System.getProperty("line.separator")
+				);
+			} catch (ResourceEnumerationException e) {
+				throw new ExecutionException("error while enumerating classpath entries", e);
 			}
+
 			Log.debug("Closing options file");
 		} catch (IOException e) {
 			throw new ExecutionException("IO error while writing javac options file", e);
