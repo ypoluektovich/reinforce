@@ -94,10 +94,13 @@ public class TestNgTarget extends AJavaBasedTestingTarget<TestDescription> {
 
 	@Override
 	protected void run(TestDescription testDescription, int index, Path workingDir) throws ExecutionException {
-		int exitCode = ExecUtil.execute(getCommandLineArray(
-				testDescription.getClasspathEntries(),
-				Build.getCurrent().getBasePath().resolve(testDescription.getSuite().getPath())
-		));
+		int exitCode = ExecUtil.execute(
+				getCommandLineArray(
+						testDescription.getClasspathEntries(),
+						Build.getCurrent().getBasePath().resolve(testDescription.getSuite().getPath())
+				),
+				workingDir
+		);
 		if (exitCode != 0) {
 			throw new ExecutionException("TestNG exited with non-zero code: " + exitCode);
 		}

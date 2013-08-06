@@ -5,16 +5,21 @@ import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.Log;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 public class ExecUtil {
 
 	public static int execute(List<String> command) throws ExecutionException {
+		return execute(command, Build.getCurrent().getBasePath());
+	}
+
+	public static int execute(List<String> command, Path workingDir) throws ExecutionException {
 		int exitCode;
 		try {
 			Log.verbose("Starting external process...");
 			Process process = new ProcessBuilder(command)
-					.directory(Build.getCurrent().getBasePath().toFile())
+					.directory(workingDir.toFile())
 					.inheritIO()
 					.start();
 			while (true) {
