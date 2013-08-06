@@ -1,8 +1,9 @@
 fallback: nop
 depends on: [ jar , compile-tests ]
-type: junit
+type: testng
 tests:
-  all in: compile-tests
+  suite: src/${module.name}/testng.xml
+  on missing: skip
   classpath:
     - jar
     - target: ^build_
@@ -15,3 +16,5 @@ tests:
       as: result of libs@default
       allow empty: yes
     - libs@test
+    - target: compile-tests
+      as: root
