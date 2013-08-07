@@ -5,5 +5,6 @@ CP=${CP}:/usr/share/java/reinforce/snakeyaml.jar
 CP=${CP}:/usr/share/java/apache-ivy/ivy.jar
 CP=${CP}:/usr/share/java/junit.jar
 CP=${CP}:/usr/share/java/hamcrest-core.jar
+CP=${CP}:/usr/share/java/testng/testng.jar
 
 "${JAVA_HOME}/bin/java" -cp "${CP}" org.msyu.reinforce.Main "$@"
