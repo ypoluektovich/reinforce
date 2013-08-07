@@ -31,18 +31,18 @@ java -cp build/core/reinforce-core.jar:build/ivy/reinforce-ivy.jar:lib/snakeyaml
 
 
 echo ""
-echo "========= Building junit"
-java -cp lib/snakeyaml-1.11.jar:lib/ivy-2.3.0.jar:lib/junit-4.11.jar:lib/hamcrest-core-1.3.jar:build/core/reinforce-core.jar:build/ivy/reinforce-ivy.jar org.msyu.reinforce.Main build_junit
+echo "========= Building testing"
+java -cp lib/snakeyaml-1.11.jar:lib/ivy-2.3.0.jar:lib/junit-4.11.jar:lib/hamcrest-core-1.3.jar:build/core/reinforce-core.jar:build/ivy/reinforce-ivy.jar org.msyu.reinforce.Main build_testing
 
 
 echo ""
-echo "========= Building core+ivy+junit with JUnit-enabled Reinforce"
-java -cp lib/snakeyaml-1.11.jar:lib/ivy-2.3.0.jar:lib/junit-4.11.jar:lib/hamcrest-core-1.3.jar:build/core/reinforce-core.jar:build/ivy/reinforce-ivy.jar:build/junit/reinforce-junit.jar org.msyu.reinforce.Main build_core build_ivy build_junit
+echo "========= Building core+ivy+testing with testing-enabled Reinforce"
+java -cp lib/snakeyaml-1.11.jar:lib/ivy-2.3.0.jar:lib/junit-4.11.jar:lib/hamcrest-core-1.3.jar:build/core/reinforce-core.jar:build/ivy/reinforce-ivy.jar:build/testing/reinforce-junit.jar org.msyu.reinforce.Main build_core build_ivy build_testing
 
 
 echo ""
 echo "========= Building dist"
-java -cp lib/snakeyaml-1.11.jar:lib/ivy-2.3.0.jar:lib/junit-4.11.jar:lib/hamcrest-core-1.3.jar:build/core/reinforce-core.jar:build/ivy/reinforce-ivy.jar:build/junit/reinforce-junit.jar org.msyu.reinforce.Main dist
+java -cp lib/snakeyaml-1.11.jar:lib/ivy-2.3.0.jar:lib/junit-4.11.jar:lib/hamcrest-core-1.3.jar:build/core/reinforce-core.jar:build/ivy/reinforce-ivy.jar:build/testing/reinforce-junit.jar org.msyu.reinforce.Main dist
 
 
 echo ""

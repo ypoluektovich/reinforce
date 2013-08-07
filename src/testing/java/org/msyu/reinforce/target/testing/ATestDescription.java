@@ -1,28 +1,30 @@
-package org.msyu.reinforce.target.junit;
+package org.msyu.reinforce.target.testing;
 
-import org.msyu.reinforce.ExecutionException;
 import org.msyu.reinforce.TargetInitializationException;
 import org.msyu.reinforce.resources.Resource;
 import org.msyu.reinforce.resources.ResourceCollection;
 import org.msyu.reinforce.resources.ResourceEnumerationException;
 import org.msyu.reinforce.resources.ResourceIterator;
+import org.msyu.reinforce.target.ActionOnEmptySource;
 
-import java.io.IOException;
-import java.io.ObjectOutput;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-public class TestDescription {
+public abstract class ATestDescription {
+
+	private final ActionOnEmptySource myActionOnMissingTests;
 
 	private final Set<URL> myClasspathEntries = new LinkedHashSet<>();
 
-	private final Set<String> myClassNames = new LinkedHashSet<>();
+	public ATestDescription(ActionOnEmptySource actionOnMissingTests) {
+		myActionOnMissingTests = actionOnMissingTests;
+	}
 
 	public void addToClasspath(URL entry) {
-		myClasspathEntries.add(entry);
+		getClasspathEntries().add(entry);
 	}
 
 	public void addToClasspath(Resource resource) throws TargetInitializationException {
@@ -49,14 +51,13 @@ public class TestDescription {
 		}
 	}
 
-	public void addClassName(String name) {
-		myClassNames.add(name);
+
+	public final ActionOnEmptySource getActionOnMissingTests() {
+		return myActionOnMissingTests;
 	}
 
-
-	public void serialize(ObjectOutput output) throws ExecutionException, IOException {
-		output.writeObject(myClasspathEntries);
-		output.writeObject(myClassNames);
+	public Set<URL> getClasspathEntries() {
+		return myClasspathEntries;
 	}
 
 }

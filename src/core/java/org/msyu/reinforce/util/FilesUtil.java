@@ -13,6 +13,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 
 public class FilesUtil {
 
+	public static final String PATH_SEPARATOR = System.getProperty("path.separator");
+
 	public static final Path EMPTY_PATH = Paths.get("");
 
 	public static void deleteFileTree(Path root) throws IOException {

@@ -1,0 +1,8 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+<suite name="core" verbose="1">
+    <test name="variables" junit="true">
+        <classes>
+            <class name="org.msyu.reinforce.util.variables.VariablesTest"/>
+        </classes>
+    </test>
+</suite>
