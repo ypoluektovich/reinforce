@@ -36,9 +36,9 @@ public final class TargetInvocation {
 	}
 
 
-	private final String myTargetName;
+	private final String targetName;
 
-	private final Map<String, Object> myParameters;
+	private final Map<String, Object> parameters;
 
 	public TargetInvocation(String targetName) {
 		this(targetName, (Map<String, String>) null);
@@ -49,34 +49,34 @@ public final class TargetInvocation {
 	}
 
 	private TargetInvocation(String targetName, Map<String, String> parameters) {
-		myTargetName = Objects.requireNonNull(targetName, "target name cannot be null");
-		myParameters = (parameters == null) ? null : new LinkedHashMap<String, Object>(parameters);
+		this.targetName = Objects.requireNonNull(targetName, "target name cannot be null");
+		this.parameters = (parameters == null) ? null : new LinkedHashMap<String, Object>(parameters);
 	}
 
 	public final String getTargetName() {
-		return myTargetName;
+		return targetName;
 	}
 
 	public final Map<String, Object> getParameters() {
-		return myParameters == null ? null : Collections.unmodifiableMap(myParameters);
+		return parameters == null ? null : Collections.unmodifiableMap(parameters);
 	}
 
 
 	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder(myTargetName);
-		if (myParameters != null) {
-			if (myParameters.size() == 1 && myParameters.containsKey("")) {
-				sb.append(myParameters.get(""));
+	public final String toString() {
+		StringBuilder sb = new StringBuilder(targetName);
+		if (parameters != null) {
+			if (parameters.size() == 1 && parameters.containsKey("")) {
+				sb.append(parameters.get(""));
 			} else {
-				sb.append(myParameters.toString());
+				sb.append(parameters.toString());
 			}
 		}
 		return sb.toString();
 	}
 
 	@Override
-	public boolean equals(Object o) {
+	public final boolean equals(Object o) {
 		if (this == o) {
 			return true;
 		}
@@ -84,12 +84,12 @@ public final class TargetInvocation {
 			return false;
 		}
 		TargetInvocation other = (TargetInvocation) o;
-		return myTargetName.equals(other.myTargetName) && Objects.equals(myParameters, other.myParameters);
+		return targetName.equals(other.targetName) && Objects.equals(parameters, other.parameters);
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash(myTargetName, myParameters);
+	public final int hashCode() {
+		return Objects.hash(targetName, parameters);
 	}
 
 }
