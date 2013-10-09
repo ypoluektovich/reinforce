@@ -90,24 +90,24 @@ public class CollectionFromMap {
 			BaseCollectionMatcherFactory<?> factory,
 			BaseCollectionMatcher previousMatcher
 	) throws ResourceConstructionException {
-		if (!defMap.containsKey(factory.myType)) {
+		if (!defMap.containsKey(factory.type)) {
 			return previousMatcher;
 		}
 		if (previousMatcher != null) {
 			throw new ResourceConstructionException(
 					"ambiguous type of map-defined resource collection: " +
-							previousMatcher.myType + " or " + factory.myType
+							previousMatcher.myType + " or " + factory.type
 			);
 		}
-		return factory.build(defMap.get(factory.myType), defMap);
+		return factory.build(defMap.get(factory.type), defMap);
 	}
 
 	private static abstract class BaseCollectionMatcherFactory<M extends BaseCollectionMatcher> {
 
-		protected final String myType;
+		protected final String type;
 
 		protected BaseCollectionMatcherFactory(String type) {
-			myType = type;
+			this.type = type;
 		}
 
 		protected abstract M build(Object setting, Map defMap) throws ResourceConstructionException;
@@ -116,7 +116,7 @@ public class CollectionFromMap {
 
 	private static class TargetMatcher extends BaseCollectionMatcher {
 
-		private final StringMatcher myStringMatcher;
+		private final InvocationMatcher invocationMatcher;
 
 		protected static class Factory extends BaseCollectionMatcherFactory<TargetMatcher> {
 
@@ -134,30 +134,30 @@ public class CollectionFromMap {
 		}
 
 		protected TargetMatcher(Object targetObject, Map defMap) throws ResourceConstructionException {
-			super(Factory.INSTANCE.myType);
+			super(Factory.INSTANCE.type);
 			if (!(targetObject instanceof String)) {
 				throw new ResourceConstructionException("target must be referenced by its name string");
 			}
 			if (defMap.containsKey("match")) {
 				Object matchSetting = defMap.get("match");
 				if ("exact".equals(matchSetting)) {
-					myStringMatcher = new EqualsMatcher((String) targetObject);
+					invocationMatcher = new EqualsMatcher((String) targetObject);
 				} else if ("regex".equals(matchSetting)) {
-					myStringMatcher = new RegexMatcher((String) targetObject);
+					invocationMatcher = new RegexMatcher((String) targetObject);
 				} else {
 					throw new ResourceConstructionException("unsupported target match setting: " + matchSetting);
 				}
 			} else {
-				myStringMatcher = new EqualsMatcher((String) targetObject);
+				invocationMatcher = new EqualsMatcher((String) targetObject);
 			}
 		}
 
 		@Override
 		protected List<Object> match() {
-			Log.debug("Matching target names with %s...", myStringMatcher);
+			Log.debug("Matching target names with %s...", invocationMatcher);
 			List<Object> matchedTargets = new ArrayList<>();
 			for (TargetInvocation executedInvocation : Build.getCurrent().getExecutedTargets()) {
-				if (myStringMatcher.fits(executedInvocation.getTargetName())) {
+				if (invocationMatcher.fits(executedInvocation)) {
 					Log.debug("%s fits", executedInvocation);
 					matchedTargets.add(Build.getCurrent().getExecutedTarget(executedInvocation));
 				} else {
@@ -169,48 +169,48 @@ public class CollectionFromMap {
 
 	}
 
-	private static interface StringMatcher {
+	private static interface InvocationMatcher {
 
-		boolean fits(String string);
+		boolean fits(TargetInvocation invocation);
 
 	}
 
-	private static class EqualsMatcher implements StringMatcher {
+	private static class EqualsMatcher implements InvocationMatcher {
 
-		private final String myTargetString;
+		private final TargetInvocation targetInvocation;
 
 		private EqualsMatcher(String targetString) {
-			myTargetString = targetString;
+			targetInvocation = TargetInvocation.parse(targetString);
 		}
 
 		@Override
-		public boolean fits(String string) {
-			return Objects.equals(myTargetString, string);
+		public boolean fits(TargetInvocation invocation) {
+			return Objects.equals(targetInvocation, invocation);
 		}
 
 		@Override
 		public String toString() {
-			return this.getClass().getName() + "{" + myTargetString + "}";
+			return this.getClass().getName() + "{" + targetInvocation + "}";
 		}
 
 	}
 
-	private static class RegexMatcher implements StringMatcher {
+	private static class RegexMatcher implements InvocationMatcher {
 
-		private final Pattern myPattern;
+		private final Pattern pattern;
 
 		private RegexMatcher(String pattern) {
-			myPattern = Pattern.compile(pattern);
+			this.pattern = Pattern.compile(pattern);
 		}
 
 		@Override
-		public boolean fits(String string) {
-			return myPattern.matcher(string).find();
+		public boolean fits(TargetInvocation invocation) {
+			return pattern.matcher(invocation.toString()).find();
 		}
 
 		@Override
 		public String toString() {
-			return this.getClass().getName() + "{" + myPattern.pattern() + "}";
+			return this.getClass().getName() + "{" + pattern.pattern() + "}";
 		}
 	}
 
@@ -234,7 +234,7 @@ public class CollectionFromMap {
 		private final String myLocationString;
 
 		protected LocationMatcher(Object locationSetting, Map defMap) throws ResourceConstructionException {
-			super(Factory.INSTANCE.myType);
+			super(Factory.INSTANCE.type);
 			if (!(locationSetting instanceof String)) {
 				throw new ResourceConstructionException("location must be a string (a path in file system)");
 			}
@@ -286,7 +286,7 @@ public class CollectionFromMap {
 		private final List myElementDefinitions;
 
 		protected UnionMatcher(Object unionSetting) throws ResourceConstructionException {
-			super(Factory.INSTANCE.myType);
+			super(Factory.INSTANCE.type);
 			if (!(unionSetting instanceof List)) {
 				throw new ResourceConstructionException("union resource collection must be a defined by a list");
 			}

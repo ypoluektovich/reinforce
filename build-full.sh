@@ -47,7 +47,7 @@ java -cp lib/snakeyaml-1.11.jar:lib/ivy-2.3.0.jar:lib/junit-4.11.jar:lib/hamcres
 
 echo ""
 echo "========= Building dist again"
-java -cp lib/snakeyaml-1.11.jar:lib/ivy-2.3.0.jar:lib/junit-4.11.jar:lib/hamcrest-core-1.3.jar:build/reinforce.jar org.msyu.reinforce.Main dist
+java -cp lib/snakeyaml-1.11.jar:lib/ivy-2.3.0.jar:lib/junit-4.11.jar:lib/hamcrest-core-1.3.jar:lib/testng-6.8.5.jar:lib/jcommander-1.27.jar:build/reinforce.jar org.msyu.reinforce.Main dist
 
 
 exit 0
